@@ -200,21 +200,6 @@ public class SIGFrame extends JFrame implements ActionListener {
         invDate.add(invDateLabel,BorderLayout.WEST);
         invDate.add(invDateField,BorderLayout.CENTER);
 
-
-//        // This part was obtained from here:
-//        // https://stackoverflow.com/questions/10128064/jtable-selected-row-click-event
-//        invDate.addListSelectionListener(new ListSelectionListener(){
-//            public void valueChanged(ListSelectionEvent event) {
-//                if (!event.getValueIsAdjusting() && invoices.getSelectedRow() != -1){
-//                    // Condition to prevent calling the event twice for each selection
-//                    reloadSelectedInvoiceDate();
-//                }
-//            }
-//        });
-
-
-
-
         // A listener to check if the customer name field has been changed.
         invDateField.addActionListener(
                 new ActionListener() {
@@ -619,6 +604,7 @@ public class SIGFrame extends JFrame implements ActionListener {
     /**
      * A method used to re-populate the right panel with the selected invoice data in case an update and refresh of the
      * view were performed.
+     *
      * It utilizes the <code>LoadSelectedInvoiceData</code> method by passing to it the current selected invoice from
      * the table.
      */

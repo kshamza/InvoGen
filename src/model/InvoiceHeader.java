@@ -142,7 +142,7 @@ public class InvoiceHeader {
      * Indicates weather an invoice header is a valid invoice.
      *
      * @param invoiceHeader A {@link String} array that represents a split header line
-     * @return <code>true</code> or <code>false</code> indicating wheather an invoice header is a valid header line.
+     * @return <code>true</code> or <code>false</code> indicating whether an invoice header is a valid header line.
      */
     public static boolean isValidHeader(String[] invoiceHeader){
         if (invoiceHeader.length != 3){
@@ -150,7 +150,7 @@ public class InvoiceHeader {
         }
 
         try{
-            int x = Integer.parseInt(invoiceHeader[0]);
+            Integer.parseInt(invoiceHeader[0]);
         } catch(NumberFormatException e){
             System.out.println("Invoice Header Malformed: Invoice Number must be an Integer.");
             return false;
@@ -168,7 +168,7 @@ public class InvoiceHeader {
     /**
      * A method used to validate the date input by the user to match the format dd-mm-yyyy.
      *
-     * @param date A {@link String} input representing the date entered by the user and to be verfieid.
+     * @param date A {@link String} input representing the date entered by the user and to be verified.
      */
     public static boolean isValidDate(String date){
         // TODO - The regex does not check for months with 30 or 31 days and the leap years.
