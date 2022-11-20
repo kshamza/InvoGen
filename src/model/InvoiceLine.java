@@ -19,6 +19,31 @@ public class InvoiceLine {
     private double itemPrice; // Price of the item
     private int count; // Number of units of the item
 
+
+    // Constructor
+
+    /**
+     * A parameterized constructor of the {@link InvoiceLine} class with a single argument.
+     *
+     * The constructor take the <code>lineString</code> of type {@link String} as an input. The {@link String}
+     * <code>lineString</code> is in the format <code>id,itemName,itemPrice,count</code>. It
+     * then splits the <code>lineString</code> using the {@link String} method <code>split</code> with the comma as a
+     * delimiter. It then assigns the parts of the resulting {@link String} array to the fields of this
+     * {@link InvoiceLine} object.
+     *
+     * @param lineString a {@link String} that represents an invoice item containing item data in the format of:
+     *                     <code>id,itemName,itemPrice,count</code>
+     */
+    public InvoiceLine(String lineString) {
+        String[] lineFields = lineString.split(",");
+
+        id = Integer.parseInt(lineFields[0]);
+        itemName = lineFields[1];
+        itemPrice = Double.parseDouble(lineFields[2]);
+        count = Integer.parseInt(lineFields[3]);
+    }
+
+
     // Methods
 
     // Getters & Setters
@@ -56,5 +81,87 @@ public class InvoiceLine {
         return count;
     }
 
-}
+    /**
+     * A method that converts this {@link InvoiceLine} object into a {@link StringBuilder} object in the format used
+     * to save in the <code>InvoiceLine.csv</code>.
+     *
+     * @return {@link StringBuilder} object representing this {@link InvoiceLine} object.
+     */
 
+    public StringBuilder lineToString(){
+        StringBuilder lineString = new StringBuilder();
+        lineString.append(getId());
+        lineString.append(",");
+        lineString.append(getItemName());
+        lineString.append(",");
+        lineString.append(getItemPrice());
+        lineString.append(",");
+        lineString.append(getCount());
+
+        return lineString;
+    }
+
+    /**
+     *
+     * @return a {@link String} representing an invoice item as specified in the requirements.
+     */
+    @Override
+    public String toString() {
+        return itemName + ", " + itemPrice + ", " + count;
+    }
+
+
+
+    /**
+     *
+     * A method that can help to detect if the line format is valid.
+     *
+     * @param invoiceLine an invoice line represented as a {@link String} array
+     * @return <code>boolean</code> indicating if the invoice line format is valid or not.
+     */
+    public static boolean isValidLine(String[] invoiceLine){
+        if (invoiceLine.length != 4){
+            return false;
+        }
+
+        try{
+            int x = Integer.parseInt(invoiceLine[0]);
+        } catch(NumberFormatException e){
+            System.out.println("Invoice Line Malformed: Invoice Number must be an Integer.");
+            return false;
+        }
+        try{
+            if (Double.parseDouble(invoiceLine[2]) < 0){
+                System.out.println("Invoice Line Malformed: Item price must be greater than or equal to 0.");
+                return false;
+            }
+
+        } catch(NumberFormatException e){
+            System.out.println("Invoice Line Malformed: Item price must be a double value.");
+            return false;
+        }
+        try{
+            if (Integer.parseInt(invoiceLine[3]) < 0){
+                System.out.println("Invoice Line Malformed: Item count must be greater than or equal to 0.");
+                return false;
+            }
+        } catch(NumberFormatException e){
+            System.out.println("Invoice Line Malformed: Item count must be an Integer.");
+            return false;
+        }
+        return true;
+    }
+
+    /**
+     * A method that can help to detect if the line format is valid.
+     *
+     * @param invoiceLine an invoice line represented as a {@link String}
+     * @return <code>boolean</code> indicating if the invoice line format is valid or not.
+     */
+
+    public static boolean isValidLine(String invoiceLine) {
+        return isValidLine(invoiceLine.split(","));
+    }
+
+
+}
