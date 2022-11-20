@@ -145,7 +145,7 @@ public class SIGFrame extends JFrame implements ActionListener {
 
     private void setWindowProperties() {
         setExtendedState(JFrame.MAXIMIZED_BOTH); // Initially maximize the window
-        setResizable(true); // Alow it to be re-sizeable
+        setResizable(true); // Allow it to be re-sizeable
         setMinimumSize(new Dimension(850, 600)); // The minimum dimensions which guarantee that all buttons
         // will have at least word such as "Create", "Delete", "Save", and "Cancel"
     }
@@ -237,7 +237,6 @@ public class SIGFrame extends JFrame implements ActionListener {
                             if (InvoiceHeader.isValidDate(updatedDate)){
                                 isDateFieldEdited = true;
                             } else {
-                                System.out.println("here");
                                 JOptionPane.showMessageDialog(null, "Invalid Date. Use format dd-mm-yyyy", "Wrong date format", JOptionPane.ERROR_MESSAGE);
                                 updatedDate = null;
                                 reloadSelectedInvoiceDate();
@@ -440,35 +439,44 @@ public class SIGFrame extends JFrame implements ActionListener {
                 resetInvoiceDataDisplay();
                 break;
             case "save": // Save changes in the invoice date and customer name.
-                if (!isDateFieldEdited && !isCustomerNameFieldEdited){  // If no changes detected, then inform the user that no changes to save.
-                    JOptionPane.showMessageDialog(null, "No changes to save!", "Unchanged Data", JOptionPane.PLAIN_MESSAGE);
-                } else { // At least one of the two data has been changed, we need to save it.
+                if (invoices.getSelectedRow() == -1) { // No invoice is selected
+                    JOptionPane.showMessageDialog(null, "You have to select an invoice first to edit and save.", "No Invoice Selected", JOptionPane.INFORMATION_MESSAGE);
+                } else {
+                    if (!isDateFieldEdited && !isCustomerNameFieldEdited){  // If no changes detected, then inform the user that no changes to save.
+                        JOptionPane.showMessageDialog(null, "No changes to save!", "Unchanged Data", JOptionPane.PLAIN_MESSAGE);
+                    } else { // At least one of the two data has been changed, we need to save it.
 
-                    int invoiceID = invoices.getSelectedRow(); // Get the row selected to edit that row.
+                        int invoiceID = invoices.getSelectedRow(); // Get the row selected to edit that row.
 
-                    if (isDateFieldEdited){ // Apply change if the date field was edited
-                        Controller.getInvoicesArrayList().get(invoiceID).setInvoiceDate(updatedDate);
+                        if (isDateFieldEdited){ // Apply change if the date field was edited
+                            Controller.getInvoicesArrayList().get(invoiceID).setInvoiceDate(updatedDate);
+                        }
+
+                        if (isCustomerNameFieldEdited){ // Apply change if the customer name field was edited
+                            Controller.getInvoicesArrayList().get(invoiceID).setCustomerName(updatedCustomerName);
+                        }
+
+                        // TODO Maybe we can separate the update file and update view this way we can save operation on updating the view.
+                        updateFilesAndView(); // Update the file and view by saving the updated table, then reload the data to update the view.
+                        invoices.setRowSelectionInterval(invoiceID, invoiceID); // After the update of view, go back and re-select the invoice the user has edited.
+
+                        // Inform the user that the invoice has been saved.
+                        JOptionPane.showMessageDialog(null, "Invoice Updated Successfully." , "Successful Update", JOptionPane.INFORMATION_MESSAGE);
+
+                        // Reset the temp holders of changed data and the flags.
+                        updatedDate = null;
+                        updatedCustomerName = null;
+                        isDateFieldEdited = false;
+                        isCustomerNameFieldEdited = false;
                     }
-
-                    if (isCustomerNameFieldEdited){ // Apply change if the customer name field was edited
-                        Controller.getInvoicesArrayList().get(invoiceID).setCustomerName(updatedCustomerName);
-                    }
-
-                    // TODO Maybe we can separate the update file and update view this way we can save operation on updaing the view.
-                    updateFilesAndView(); // Update the file and view by saving the updated table, then reload the data to update the view.
-                    invoices.setRowSelectionInterval(invoiceID, invoiceID); // After the update of view, go back and re-select the invoice the user has edited.
-
-                    // Inform the user that the invoice has been saved.
-                    JOptionPane.showMessageDialog(null, "Invoice Updated Successfully." , "Successful Update", JOptionPane.INFORMATION_MESSAGE);
-
-                    // Reset the temp holders of changed data and the flags.
-                    updatedDate = null;
-                    updatedCustomerName = null;
-                    isDateFieldEdited = false;
-                    isCustomerNameFieldEdited = false;
                 }
                 break;
             case "new":
+                // Reset any edits before heading to new invoice form.
+                if (isDateFieldEdited || isCustomerNameFieldEdited) {
+                    resetChangedFields();
+                }
+
                 JDialog nI = new NewInvoiceForm(this);
                 nI.setModalityType(Dialog.ModalityType.APPLICATION_MODAL);
                 updateFilesAndView();
@@ -482,7 +490,7 @@ public class SIGFrame extends JFrame implements ActionListener {
 
                     if (a == 0){ // Selected Yes --> Implement Deletion
                         // Handle deletion at two points: UI and FileOperations to save the data without the deleted invoice.
-                        // Insted of deleting the row, we will delete the invoice from the file and then reload the updated file.
+                        // Instead of deleting the row, we will delete the invoice from the file and then reload the updated file.
 
                         for (int i = 0 ; i < Controller.getInvoicesArrayList().size() ; i++){
                             if (Controller.getInvoicesArrayList().get(i).getInvoiceNumber() == invoiceID){
@@ -501,10 +509,7 @@ public class SIGFrame extends JFrame implements ActionListener {
                     // This means a line from the main table is selected and some edits have been performed
                     // Cancel will just reload the invoice again to overwrite any changes that may have been done to the invoice
                     reloadSelectedInvoiceDate();
-                    updatedCustomerName = null;
-                    updatedDate = null;
-                    isDateFieldEdited = false;
-                    isCustomerNameFieldEdited = false;
+                    resetChangedFields();
                 }
         }
     }
@@ -613,8 +618,7 @@ public class SIGFrame extends JFrame implements ActionListener {
 
     /**
      * A method used to re-populate the right panel with the selected invoice data in case an update and refresh of the
-     * view were perfromed.
-     *
+     * view were performed.
      * It utilizes the <code>LoadSelectedInvoiceData</code> method by passing to it the current selected invoice from
      * the table.
      */
@@ -646,11 +650,21 @@ public class SIGFrame extends JFrame implements ActionListener {
      * A method used to save the changes to the file and then re-load the data to update the view.
      */
     private void updateFilesAndView(){
-        Controller.save(); // Call the Controller's save method
+        Controller.save(); // Call the Controller's method "save"
         loadInvoices(); // Load the invoices to the view.
         resetInvoiceDataDisplay(); // Reset the selected invoice and the right panel.
     }
 
+
+    /**
+     * A method that is used to reset the changed date and customer name fields.
+     */
+    private void resetChangedFields(){
+        updatedCustomerName = null;
+        updatedDate = null;
+        isDateFieldEdited = false;
+        isCustomerNameFieldEdited = false;
+    }
 
     /**
      * A method that performs pre-exit check on any changes that may have been done to the Date and Customer Name fields.
