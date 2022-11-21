@@ -67,6 +67,8 @@ Notice that no build automation is used to manage this project. Please follow th
 3. Open the project using [IntelliJ IDEA](https://www.jetbrains.com/idea/) or other preferred IDE.
 4. Open and run the file ```src/app/Main.java```
 
+![A gif showing how to run the project](/resources/assets/images/SIG%20Preview_Run%20Project.gif "Starting the project")
+
 
 ## UI
 
