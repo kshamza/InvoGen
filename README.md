@@ -81,7 +81,7 @@ The following are some design aspects taken into consideration while building th
 
 ### Invoice Display
 
-* Selected invoice in the invoices table on the left side will display the invoice info int he right panel.
+* Selected invoice in the invoices table on the left side will display the invoice info in the right panel.
 * Only the Date and Customer Name fields are made editable. The specifications were not clear on whether the invoice items can be edited as well.
 * An invoice must be selected before the Delete button can delete an invoice.
 * Edited Date and/or Customer Name can be saved using Save button. Changes must be made for the Save button to work.
@@ -153,5 +153,5 @@ The following are some issues:
 
 ## Lessons Learned
 * Unclear Specifications can lead to very complicated design and implementation challenges.
-* Need to do a better job at commitiing more to GitHub and less offline work.
-* While searching for answers to some of challenges, found a lot of discussion about NetBeans IDE. It seems to be more of a drag and drop.
+* Need to do a better job at committing more to GitHub and less offline work.
+* While searching for answers to a few challenges, found a lot of discussion about NetBeans IDE. It seems to be more of a drag and drop.
