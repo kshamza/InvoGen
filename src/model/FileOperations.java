@@ -29,34 +29,34 @@ public class FileOperations {
      *
      * @param args
      */
-//    public static void main(String[] args) {
-//
-//        // Testing the read
-//        ArrayList<InvoiceHeader> headersArrayList = readFile();
-//
-//        for (InvoiceHeader header : headersArrayList) {
-//            System.out.println(header);
-//        }
-//
-////        // Appending the data with an invoice to test the save
-////        InvoiceHeader tempInvoice = new InvoiceHeader("52,30-11-2022,John Doe");
-////        InvoiceLine invLine1 = new InvoiceLine("52,item1,1234.0,1");
-////        InvoiceLine invLine2 = new InvoiceLine("52,item2,5678.0,2");
-////
-////        tempInvoice.getInvoiceLines().add(invLine1);
-////        tempInvoice.getInvoiceLines().add(invLine2);
-////
-////        headersArrayList.add(tempInvoice);
-//
-//        // Testing the save by saving nad then re-loading the data
-//        saveFile(headersArrayList);
-//
-//        headersArrayList = readFile();
-//
-//        for (InvoiceHeader header : headersArrayList) {
-//            System.out.println(header);
-//        }
-//    }
+    public static void main(String[] args) {
+
+        // Testing the read
+        ArrayList<InvoiceHeader> headersArrayList = readFile();
+
+        for (InvoiceHeader header : headersArrayList) {
+            System.out.println(header);
+        }
+
+        // Appending the data with an invoice to test the save
+        InvoiceHeader tempInvoice = new InvoiceHeader("52,30-11-2022,John Doe");
+        InvoiceLine invLine1 = new InvoiceLine("52,item1,1234.0,1");
+        InvoiceLine invLine2 = new InvoiceLine("52,item2,5678.0,2");
+
+        tempInvoice.getInvoiceLines().add(invLine1);
+        tempInvoice.getInvoiceLines().add(invLine2);
+
+        headersArrayList.add(tempInvoice);
+
+        // Testing the save by saving nad then re-loading the data
+        saveFile(headersArrayList);
+
+        headersArrayList = readFile();
+
+        for (InvoiceHeader header : headersArrayList) {
+            System.out.println(header);
+        }
+    }
 
     /**
      * A method to read the data from the CSV files storing the invoices and their items.
