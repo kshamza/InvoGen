@@ -29,6 +29,7 @@ public class FileOperations {
      *
      * @param args
      */
+    /*
     public static void main(String[] args) {
 
         // Testing the read
@@ -57,7 +58,8 @@ public class FileOperations {
             System.out.println(header);
         }
     }
-
+*/
+    
     /**
      * A method to read the data from the CSV files storing the invoices and their items.
      *
