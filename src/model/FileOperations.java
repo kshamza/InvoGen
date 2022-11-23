@@ -3,11 +3,9 @@ package model;
 import controller.Controller;
 import exceptions.FileFormatException;
 
-import javax.naming.ldap.Control;
 import javax.swing.*;
 import javax.swing.filechooser.FileNameExtensionFilter;
 import java.io.*;
-import java.nio.file.Paths;
 import java.util.ArrayList;
 
 /**
@@ -244,7 +242,7 @@ public class FileOperations {
                 headersString.append("\r");
             }
 
-            // A temporary ArrayList used to store the invoice lines so we can iterate over them and convert to Strings.
+            // A temporary ArrayList used to store the invoice lines, so we can iterate over them and convert to Strings.
             ArrayList<InvoiceLine> lines = invoiceHeaders.get(i).getInvoiceLines();
 
             // Forming the StringBuilder object of the linesString to be written to the InvoiceLine.csv
