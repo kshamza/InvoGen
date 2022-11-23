@@ -457,14 +457,25 @@ public class SIGFrame extends JFrame implements ActionListener {
                 }
                 break;
             case "new":
-                // Reset any edits before heading to new invoice form.
-                if (isDateFieldEdited || isCustomerNameFieldEdited) {
-                    resetChangedFields();
+                if (Controller.getHeaderFileExist() && Controller.getLinesFileExist()){ // Allow saving only if proper files are selected.
+                    // Reset any edits before heading to new invoice form.
+                    if (isDateFieldEdited || isCustomerNameFieldEdited) {
+                        resetChangedFields();
+                    }
+
+                    JDialog nI = new NewInvoiceForm(this);
+                    nI.setModalityType(Dialog.ModalityType.APPLICATION_MODAL);
+                    updateFilesAndView();
+
+                    // After the new invoice dialog, we select the last item in the table
+                    int tableSize = invoicesTableModel.getRowCount();
+                    if (tableSize >= 1){
+                        invoices.setRowSelectionInterval(tableSize-1, tableSize-1); // After the update of view, go back and re-select the invoice the user has edited.
+                    }
+                } else {
+                    JOptionPane.showMessageDialog(null, "You have to select files first before creating and saving new invoices..", "Files are not Selected", JOptionPane.INFORMATION_MESSAGE);
                 }
 
-                JDialog nI = new NewInvoiceForm(this);
-                nI.setModalityType(Dialog.ModalityType.APPLICATION_MODAL);
-                updateFilesAndView();
                 break;
             case "delete":
                 if (invoices.getSelectedRow() == -1){ // This means no line from the main table is selected, print a message
@@ -488,6 +499,12 @@ public class SIGFrame extends JFrame implements ActionListener {
                     }
                     // Otherwise, do nothing.
                 }
+
+                // After delete, if the table is not empty, select the first row in the table
+                if (invoicesTableModel.getRowCount() >= 1){
+                    invoices.setRowSelectionInterval(0, 0); // After the update of view, go back and re-select the invoice the user has edited.
+                }
+
                 break;
             case "cancel":
                 if (invoices.getSelectedRow() != -1 && (updatedCustomerName != null || updatedDate != null)){
@@ -505,17 +522,49 @@ public class SIGFrame extends JFrame implements ActionListener {
      */
     private void loadInvoices(){
         // Loading the invoices from the files and getting the array of invoices.
-        Controller.load();
+        Controller.load("prompt");
+        displayInvoices();
+    }
 
+    /**
+     * User to reload the view in case save, edit, or delete have been done without a new prompt to the user
+     */
+    private void reLoadInvoices(){
+        // Loading the invoices from the files and getting the array of invoices.
+        Controller.load("reload");
+        displayInvoices();
+    }
+
+    /**
+     * A method used to save the changes to the file and then re-load the data to update the view.
+     *
+     * This method is used after save, delete, new.
+     */
+    private void updateFilesAndView(){
+        Controller.save(); // Call the Controller's method "save"
+        reLoadInvoices();
+        displayInvoices(); // Load the invoices to the view.
+        resetInvoiceDataDisplay(); // Reset the selected invoice and the right panel.
+    }
+
+    private void resetTotalView(){
         // Resetting the table model of the invoices table in the left panel.
+        resetInvoiceDataDisplay();
         invoicesTableModel.setRowCount(0);
 
+    }
+
+    private void displayInvoices(){
+
+        resetTotalView(); // Reset view to prepare for loading the new view
+
         if (!Controller.getHeaderFileExist()){ // Invoices file does not exit, show error message to place the file.
-            JOptionPane.showMessageDialog(null, "InvoiceHeader.csv is missing! Add it to resources and then load." , "Header File Does Not Exist", JOptionPane.ERROR_MESSAGE);
+            JOptionPane.showMessageDialog(null, "To get started, you will need to load InvoiceHeader.csv.\n\nTo load the file:\n1- Select File --> Load, or \n2- Press ctrl + L" , "Header File is not loaded", JOptionPane.WARNING_MESSAGE);
+            resetTotalView();
         } else { // The invoices file exists, load the data and check for the invoiceItems file.
             if (Controller.getHeaderFileMalformed()){ // Invoices file has formatting problem
                 JOptionPane.showMessageDialog(null, "InvoiceHeader.csv is malformed! Fix the format error and then load." , "Header File Malformed", JOptionPane.ERROR_MESSAGE);
-                resetInvoiceDataDisplay();
+                resetTotalView();
             } else {
 
                 /*
@@ -524,27 +573,30 @@ public class SIGFrame extends JFrame implements ActionListener {
                  */
 
                 if (!Controller.getLinesFileExist()){
-                    JOptionPane.showMessageDialog(null, "InvoiceLines.csv is missing! Add it to resources and then load.\nInvoice Items and total will not be displayed!" , "Lines File Does Not Exist", JOptionPane.ERROR_MESSAGE);
-                }
+                    JOptionPane.showMessageDialog(null, "You will need to load InvoiceLine.csv after loading the InvoiceHeader.csv file.\n\nTo load the files:\n1- Select File --> Load, or \n2- Press ctrl + L" , "Header File is not loaded", JOptionPane.WARNING_MESSAGE);
+                    resetTotalView();
+                } else {
+                    String[][] invoicesArray = Controller.getInvoicesArray();
 
-                String[][] invoicesArray = Controller.getInvoicesArray();
-
-                // Adding the fetched invoices to the table
-                for (String[] invoice : invoicesArray){
-                    if (!Controller.getLinesFileMalformed()){ // Present normal row if the invoice line is not malformed
-                        invoicesTableModel.addRow(new Object[] {invoice[0], invoice[1], invoice[2], invoice[3]});
-                    } else { // If the Invoice Lines file is malformed,
-                        JOptionPane.showMessageDialog(null, "InvoiceLine.csv is malformed! Fix the format error and then load." , "Invoice Lines File Malformed", JOptionPane.ERROR_MESSAGE);
-                        break;
+                    // Adding the fetched invoices to the table
+                    for (String[] invoice : invoicesArray){
+                        if (!Controller.getLinesFileMalformed()){ // Present normal row if the invoice line is not malformed
+                            invoicesTableModel.addRow(new Object[] {invoice[0], invoice[1], invoice[2], invoice[3]});
+                        } else { // If the Invoice Lines file is malformed,
+                            JOptionPane.showMessageDialog(null, "InvoiceLine.csv is malformed! Fix the format error and then load." , "Invoice Lines File Malformed", JOptionPane.ERROR_MESSAGE);
+                            resetTotalView();
+                            break;
+                        }
                     }
-                }
 
-                // Setting the table model to the fetched data.
-                invoices.setModel(invoicesTableModel);
+                    // Setting the table model to the fetched data.
+                    invoices.setModel(invoicesTableModel);
+                }
 
             }
         }
     }
+
 
     /**
      * Given the <code>invoiceID</code>, the method will load the data of the selected invoice into the right panel showing
@@ -631,16 +683,6 @@ public class SIGFrame extends JFrame implements ActionListener {
             invoiceItemsTableModel.setRowCount(0);
         }
     }
-
-    /**
-     * A method used to save the changes to the file and then re-load the data to update the view.
-     */
-    private void updateFilesAndView(){
-        Controller.save(); // Call the Controller's method "save"
-        loadInvoices(); // Load the invoices to the view.
-        resetInvoiceDataDisplay(); // Reset the selected invoice and the right panel.
-    }
-
 
     /**
      * A method that is used to reset the changed date and customer name fields.

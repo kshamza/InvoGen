@@ -4,6 +4,8 @@ import controller.Controller;
 import exceptions.FileFormatException;
 
 import javax.naming.ldap.Control;
+import javax.swing.*;
+import javax.swing.filechooser.FileNameExtensionFilter;
 import java.io.*;
 import java.nio.file.Paths;
 import java.util.ArrayList;
@@ -17,8 +19,12 @@ import java.util.ArrayList;
 
 public class FileOperations {
 
-    private static final String INVOICE_HEADER_FILE_PATH = "resources/InvoiceHeader.csv";
-    private static final String INVOICE_LINES_FILE_PATH = "resources/InvoiceLine.csv";
+
+    // Default path is set to the resources directory of the project. The user can, however, navigate away from it.
+    private static final String DEFAULT_PATH = "resources/";
+
+    private static String invoiceHeaderFilePath;
+    private static String invoiceLinesFilePath;
 
     /**
      * A driver method used to test the file operations of loading and saving data.
@@ -29,11 +35,11 @@ public class FileOperations {
      *
      * @param args
      */
-    /*
+/*
     public static void main(String[] args) {
 
         // Testing the read
-        ArrayList<InvoiceHeader> headersArrayList = readFile();
+        ArrayList<InvoiceHeader> headersArrayList = readFile("prompt");
 
         for (InvoiceHeader header : headersArrayList) {
             System.out.println(header);
@@ -52,14 +58,14 @@ public class FileOperations {
         // Testing the save by saving nad then re-loading the data
         saveFile(headersArrayList);
 
-        headersArrayList = readFile();
+        headersArrayList = readFile("reload");
 
         for (InvoiceHeader header : headersArrayList) {
             System.out.println(header);
         }
     }
 */
-    
+
     /**
      * A method to read the data from the CSV files storing the invoices and their items.
      *
@@ -70,77 +76,93 @@ public class FileOperations {
      * @return {@link ArrayList} of {@link InvoiceHeader} objects. Each object represents an invoice including its id,
      *            date, customer name, and an {@link ArrayList} of {@link InvoiceLine} representing the invoice items.
      */
-    public static ArrayList<InvoiceHeader> readFile() {
-
-        // Resetting the file mar=lformed flags
-        Controller.setLinesFileMalformed(false);
-        Controller.setHeaderFileMalformed(false);
-
-        // Reading Headers
-        String[] headersArray = getCSVFileRows(INVOICE_HEADER_FILE_PATH);
-
-        // An ArrayList of type InvoiceHeader to be returned.
-        ArrayList<InvoiceHeader> headersArrayList = new ArrayList<>();
-
-        // Creating InvoiceHeader Object for each header element in headers
-        for (String header : headersArray) {
-            String trimmedHeader = header.trim();
-            if (!trimmedHeader.isBlank()) {
-                try{
-                    String[] tempHeader = trimmedHeader.split(",");
-
-                    if (tempHeader.length % 3 == 0 && InvoiceHeader.isValidHeader(tempHeader)){ // Checking if the line consists of three parts
-                        headersArrayList.add(new InvoiceHeader(trimmedHeader));
-                    } else {
-                        throw new FileFormatException();
-                    }
-                } catch (FileFormatException e){
-                    Controller.setHeaderFileMalformed(true);
-                    System.out.println("InvoiceHeader.csv file is malformed. Fix the file and reload!");
-                }
-            }
+    public static ArrayList<InvoiceHeader> readFile(String loadingType) {
+        if (loadingType.equals("prompt")){ // If the loading type is prompt, call the file loader, else, reload with existing file.
+            fileLoader();
         }
 
-        // Reading Lines only if the headers file is not malformed
+        if (invoiceHeaderFilePath != null && invoiceLinesFilePath != null){ // If two csv files are selected.
+            // An ArrayList of type InvoiceHeader to be returned.
+            ArrayList<InvoiceHeader> headersArrayList = new ArrayList<>();
 
-        if (!Controller.getHeaderFileMalformed()){
-            String[] linesArray = getCSVFileRows(INVOICE_LINES_FILE_PATH);
+            // Reading Headers
+            String[] headersArray = getCSVFileRows(invoiceHeaderFilePath);
 
-            /*
-             * Converting each String into an ArrayList element of type InvoiceLine and
-             * adding it to the corresponding InvoiceHeader
-             */
+            // Creating InvoiceHeader Object for each header element in headers and verify the format of the header file.
+            for (String header : headersArray) {
+                String trimmedHeader = header.trim();
+                if (!trimmedHeader.isBlank()) {
+                    try{
+                        String[] tempHeader = trimmedHeader.split(",");
 
-            for (String line : linesArray) {
-
-                String trimmedLine = line.trim();
-
-                try{
-                    String[] tempLine = trimmedLine.split(",");
-                    if (!trimmedLine.isBlank()) {
-                        if (tempLine.length % 4 == 0 && InvoiceLine.isValidLine(tempLine)){
-                            InvoiceLine invLine = new InvoiceLine(trimmedLine);
-
-                            // If the id of the read line matches the line of header invoice number, add it
-                            // to the ArrayList of lines.
-                            for (InvoiceHeader header : headersArrayList) {
-                                if (header.getInvoiceNumber() == invLine.getId()) {
-                                    header.getInvoiceLines().add(invLine);
-                                }
-                            }
+                        if (tempHeader.length % 3 == 0 && InvoiceHeader.isValidHeader(tempHeader)){ // Checking if the line consists of three parts
+                            headersArrayList.add(new InvoiceHeader(trimmedHeader));
                         } else {
                             throw new FileFormatException();
                         }
+                    } catch (FileFormatException e){
+                        Controller.setHeaderFileMalformed(true);
+                        System.out.println("InvoiceHeader.csv file is malformed. Fix the file and reload!");
+                        break; // break out once you find one line that is malformed.
                     }
-                } catch (FileFormatException e){
-                    Controller.setLinesFileMalformed(true);
-                    System.out.println("InvoiceLine.csv file is malformed. Fix the file and reload!");
                 }
             }
+
+            // Reading Lines only if the headers file is not malformed
+            if (!Controller.getHeaderFileMalformed()){
+
+                String[] linesArray = getCSVFileRows(invoiceLinesFilePath);
+
+                /*
+                 * Converting each String into an ArrayList element of type InvoiceLine and
+                 * adding it to the corresponding InvoiceHeader
+                 */
+
+                for (String line : linesArray) {
+
+                    String trimmedLine = line.trim();
+
+                    try{
+                        String[] tempLine = trimmedLine.split(",");
+                        if (!trimmedLine.isBlank()) {
+                            if (tempLine.length % 4 == 0 && InvoiceLine.isValidLine(tempLine)){
+                                InvoiceLine invLine = new InvoiceLine(trimmedLine);
+
+                                // If the id of the read line matches the line of header invoice number, add it
+                                // to the ArrayList of lines.
+                                for (InvoiceHeader header : headersArrayList) {
+                                    if (header.getInvoiceNumber() == invLine.getId()) {
+                                        header.getInvoiceLines().add(invLine);
+                                    }
+                                }
+                            } else {
+                                throw new FileFormatException();
+                            }
+                        }
+                    } catch (FileFormatException e){
+                        Controller.setLinesFileMalformed(true);
+                        System.out.println("InvoiceLine.csv file is malformed. Fix the file and reload!");
+                        break; // Break out of the loop once you fins one line that is malformed in the lines file.
+                    }
+                }
+            } else {
+                headersArrayList.clear();
+            }
+
+            return headersArrayList;
         }
 
+        return null;
+    }
 
-        return headersArrayList;
+    private static void resetFileStates() {
+        // Resetting the file mar=lformed flags
+        Controller.setLinesFileMalformed(false);
+        Controller.setHeaderFileMalformed(false);
+        Controller.setHeaderFileExist(false);
+        Controller.setLinesFileExist(false);
+        setInvoiceHeaderFilePath(null);
+        setInvoiceLinesFilePath(null);
     }
 
     /**
@@ -160,7 +182,6 @@ public class FileOperations {
         FileInputStream fis = null;
 
         try {
-
             fis = new FileInputStream(filePath);
             byte[] b = fis.readAllBytes();
             String str = new String(b);
@@ -238,8 +259,8 @@ public class FileOperations {
         }
 
         // Writing to the files
-        writeCSVFileRows(INVOICE_HEADER_FILE_PATH, headersString); // Pass the headerString to the header file to be written
-        writeCSVFileRows(INVOICE_LINES_FILE_PATH, linesString); // Pass linesString to the lines file to be written
+        writeCSVFileRows(invoiceHeaderFilePath, headersString); // Pass the headerString to the header file to be written
+        writeCSVFileRows(invoiceLinesFilePath, linesString); // Pass linesString to the lines file to be written
     }
 
 
@@ -281,5 +302,51 @@ public class FileOperations {
     }
 
 
+    private static void setInvoiceHeaderFilePath(String invoiceHeaderFilePath) {
+        FileOperations.invoiceHeaderFilePath = invoiceHeaderFilePath;
+    }
 
+    private static void setInvoiceLinesFilePath(String invoiceLinesFilePath) {
+        FileOperations.invoiceLinesFilePath = invoiceLinesFilePath;
+    }
+
+
+    private static void fileLoader() {
+        JFileChooser fileChooser = new JFileChooser(DEFAULT_PATH);
+        fileChooser.setSelectedFile(null);
+        FileNameExtensionFilter fileFilter = new FileNameExtensionFilter("CSV Files", "csv");
+        fileChooser.setFileFilter(fileFilter);
+
+        File f = new File(DEFAULT_PATH + "InvoiceHeader.csv");
+        fileChooser.setSelectedFile(f);
+
+        if (fileChooser.showOpenDialog(null) == JFileChooser.APPROVE_OPTION ) {
+
+            if (fileChooser.getSelectedFile().getPath().endsWith("InvoiceHeader.csv")){
+                resetFileStates(); // Reset the file states and re-populate only if the user takes the first serious step into loading new files.
+
+                setInvoiceHeaderFilePath(fileChooser.getSelectedFile().getPath());
+                Controller.setHeaderFileExist(true);
+            } else {
+                setInvoiceHeaderFilePath(null);
+                Controller.setHeaderFileExist(false);
+            }
+        } else {
+            setInvoiceHeaderFilePath(invoiceHeaderFilePath);
+        }
+
+        f = new File(DEFAULT_PATH + "InvoiceLine.csv");
+        fileChooser.setSelectedFile(f);
+
+        if (fileChooser.showOpenDialog(null) == JFileChooser.APPROVE_OPTION ) {
+            if (fileChooser.getSelectedFile().getPath().endsWith("InvoiceLine.csv")){
+                setInvoiceLinesFilePath(fileChooser.getSelectedFile().getPath());
+                Controller.setLinesFileExist(true);
+            } else {
+                setInvoiceLinesFilePath(null);
+            }
+        } else {
+            setInvoiceLinesFilePath(invoiceLinesFilePath);
+        }
+    }
 }

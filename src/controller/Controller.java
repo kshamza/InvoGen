@@ -38,42 +38,54 @@ public final class Controller {
      * each invoice item. The use of HashMap will be helpful to obtain the invoice items from the Controller to be listed
      * as the user select different invoices on the invoices table.
      */
-    public static void load(){
-        invoicesArrayList =  FileOperations.readFile();
-        int invoicesCount = invoicesArrayList.size();
-        invoicesArray = new String[invoicesCount][4];
-        invoiceLinesMap = new HashMap<>();
-        ArrayList<InvoiceLine> invoiceLineArrayList;
-        int linesCount;
-        String[][] tempInvoiceLinesArray;
+    public static void load(String loadingType){
 
-        for (int i = 0 ; i < invoicesCount ; i++){
-            InvoiceHeader iH = invoicesArrayList.get(i);
-            int invNum = iH.getInvoiceNumber();
-            invoicesArray[i][0] = String.valueOf(invNum);
-            invoicesArray[i][1] = iH.getInvoiceDate();
-            invoicesArray[i][2] = iH.getCustomerName();
+        ArrayList<InvoiceHeader> tempInvoiceArrayList = FileOperations.readFile(loadingType);
 
-            double invoiceTotal = 0;
-            invoiceLineArrayList = iH.getInvoiceLines();
-            linesCount = invoiceLineArrayList.size();
-            tempInvoiceLinesArray = new String[linesCount][5];
+        if (tempInvoiceArrayList != null){ // Reading successful, populate
+            invoicesArrayList =  tempInvoiceArrayList;
+            int invoicesCount = invoicesArrayList.size();
+            invoicesArray = new String[invoicesCount][4];
+            invoiceLinesMap = new HashMap<>();
+            ArrayList<InvoiceLine> invoiceLineArrayList;
+            int linesCount;
+            String[][] tempInvoiceLinesArray;
 
-            for (int j = 0 ; j < linesCount ; j++){
-                InvoiceLine iL = invoiceLineArrayList.get(j);
-                tempInvoiceLinesArray[j][0] = String.valueOf(invNum);
-                tempInvoiceLinesArray[j][1] = iL.getItemName();
-                tempInvoiceLinesArray[j][2] = String.valueOf(iL.getItemPrice());
-                tempInvoiceLinesArray[j][3] = String.valueOf(iL.getCount());
-                tempInvoiceLinesArray[j][4] = String.valueOf(iL.getItemPrice() * iL.getCount());
-                invoiceTotal += (iL.getItemPrice() * iL.getCount());
+            for (int i = 0 ; i < invoicesCount ; i++){
+                InvoiceHeader iH = invoicesArrayList.get(i);
+                int invNum = iH.getInvoiceNumber();
+                invoicesArray[i][0] = String.valueOf(invNum);
+                invoicesArray[i][1] = iH.getInvoiceDate();
+                invoicesArray[i][2] = iH.getCustomerName();
+
+                double invoiceTotal = 0;
+                invoiceLineArrayList = iH.getInvoiceLines();
+                linesCount = invoiceLineArrayList.size();
+                tempInvoiceLinesArray = new String[linesCount][5];
+
+                for (int j = 0 ; j < linesCount ; j++){
+                    InvoiceLine iL = invoiceLineArrayList.get(j);
+                    tempInvoiceLinesArray[j][0] = String.valueOf(invNum);
+                    tempInvoiceLinesArray[j][1] = iL.getItemName();
+                    tempInvoiceLinesArray[j][2] = String.valueOf(iL.getItemPrice());
+                    tempInvoiceLinesArray[j][3] = String.valueOf(iL.getCount());
+                    tempInvoiceLinesArray[j][4] = String.valueOf(iL.getItemPrice() * iL.getCount());
+                    invoiceTotal += (iL.getItemPrice() * iL.getCount());
+                }
+
+                invoiceLinesMap.put(invNum, tempInvoiceLinesArray);
+                invoicesArray[i][3] = String.valueOf(invoiceTotal);
+
+                latestInvoiceNumber = invNum + 1; // Adding one after getting the highest invoice number loaded from the file.
             }
-
-            invoiceLinesMap.put(invNum, tempInvoiceLinesArray);
-            invoicesArray[i][3] = String.valueOf(invoiceTotal);
-
-            latestInvoiceNumber = invNum + 1; // Adding one after getting the highest invoice number loaded from the file.
+        } else {
+            if (invoicesArrayList != null){
+                // Loading is unsuccessful, the user selected file, so we commit to resetting view and showing error messages
+                invoicesArrayList.clear();
+            }
         }
+
+
     }
 
     /**
