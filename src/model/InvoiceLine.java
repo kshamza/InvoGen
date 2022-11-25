@@ -151,6 +151,10 @@ public class InvoiceLine {
         return "";
     }
 
+
+
+
+
     /**
      * A method that can help to detect if the line format is valid.
      *

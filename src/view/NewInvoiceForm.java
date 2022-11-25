@@ -14,7 +14,6 @@ import java.util.ArrayList;
 
 /**
  * A dialog to take the data for a new invoice from the user.
- *
  * To save time this class was taken from @see https://www.geeksforgeeks.org/java-swing-simple-user-registration-form/
  *  The form has been changed to match my objective which is to take an input of a new invoice.
  *
@@ -226,9 +225,6 @@ public class NewInvoiceForm extends JDialog implements ActionListener {
         toFront();
     }
 
-
-
-
     private void setFormWindowProperties() {
         setTitle("New Invoice Form");
 
@@ -250,7 +246,6 @@ public class NewInvoiceForm extends JDialog implements ActionListener {
         getRootPane().setWindowDecorationStyle(JRootPane.NONE);
         setResizable(false);
     }
-
 
     @Override
     public void actionPerformed(ActionEvent e) {
@@ -299,10 +294,6 @@ public class NewInvoiceForm extends JDialog implements ActionListener {
         } else if (e.getSource() == cancel){
             dispose();
         }
-    }
-
-    public static InvoiceHeader getNewInvoice() {
-        return newInvoice;
     }
 }
 

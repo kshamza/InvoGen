@@ -1,7 +1,6 @@
 package view;
 
 import controller.Controller;
-import model.InvoiceHeader;
 import model.InvoiceLine;
 
 import javax.swing.*;
