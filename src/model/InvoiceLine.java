@@ -117,49 +117,52 @@ public class InvoiceLine {
      * A method that can help to detect if the line format is valid.
      *
      * @param invoiceLine an invoice line represented as a {@link String} array
-     * @return <code>boolean</code> indicating if the invoice line format is valid or not.
+     * @return <code>String</code> indicating if the invoice line format is valid or not. If returned "" this means valid line, otherwise, it will be a non-empty String holding the error message related to the invalid field
      */
-    public static boolean isValidLine(String[] invoiceLine){
+    public static String isValidLine(String[] invoiceLine){
+
         if (invoiceLine.length != 4){
-            return false;
+            return "Too many fields per item line!";
         }
 
         try{
             int x = Integer.parseInt(invoiceLine[0]);
         } catch(NumberFormatException e){
-            System.out.println("Invoice Line Malformed: Invoice Number must be an Integer.");
-            return false;
+            return "Invoice Line Malformed: Invoice Number must be an Integer.";
         }
+
         try{
             if (Double.parseDouble(invoiceLine[2]) < 0){
-                System.out.println("Invoice Line Malformed: Item price must be greater than or equal to 0.");
-                return false;
+                return "Invoice Line Malformed: Item price must be greater than or equal to 0.";
             }
-
         } catch(NumberFormatException e){
-            System.out.println("Invoice Line Malformed: Item price must be a double value.");
-            return false;
+            return "Invoice Line Malformed: Item price must be a double value.";
         }
+
+
         try{
             if (Integer.parseInt(invoiceLine[3]) < 0){
-                System.out.println("Invoice Line Malformed: Item count must be greater than or equal to 0.");
-                return false;
+                return "Invoice Line Malformed: Item count must be greater than or equal to 0.";
             }
         } catch(NumberFormatException e){
-            System.out.println("Invoice Line Malformed: Item count must be an Integer.");
-            return false;
+            return "Invoice Line Malformed: Item count must be an Integer.";
         }
-        return true;
+
+        return "";
     }
+
+
+
+
 
     /**
      * A method that can help to detect if the line format is valid.
      *
      * @param invoiceLine an invoice line represented as a {@link String}
-     * @return <code>boolean</code> indicating if the invoice line format is valid or not.
+     * @return <code>String</code> indicating if the invoice line format is valid or not. If returned "" this means valid line, otherwise, it will be a non-empty String holding the error message related to the invalid field
      */
 
-    public static boolean isValidLine(String invoiceLine) {
+    public static String isValidLine(String invoiceLine) {
         return isValidLine(invoiceLine.split(","));
     }
 

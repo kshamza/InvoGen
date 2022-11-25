@@ -123,7 +123,7 @@ public class FileOperations {
                     try{
                         String[] tempLine = trimmedLine.split(",");
                         if (!trimmedLine.isBlank()) {
-                            if (tempLine.length % 4 == 0 && InvoiceLine.isValidLine(tempLine)){
+                            if (tempLine.length % 4 == 0 && InvoiceLine.isValidLine(tempLine).equals("")){
                                 InvoiceLine invLine = new InvoiceLine(trimmedLine);
 
                                 // If the id of the read line matches the line of header invoice number, add it
