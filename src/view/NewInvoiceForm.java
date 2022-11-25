@@ -5,10 +5,12 @@ import model.InvoiceHeader;
 import model.InvoiceLine;
 
 import javax.swing.*;
+import javax.swing.table.DefaultTableModel;
 import java.awt.*;
 import java.awt.event.ActionEvent;
 import java.awt.event.ActionListener;
 import java.awt.event.KeyEvent;
+import java.util.ArrayList;
 
 /**
  * A dialog to take the data for a new invoice from the user.
@@ -28,10 +30,23 @@ public class NewInvoiceForm extends JDialog implements ActionListener {
     private JComboBox month;
     private JComboBox year;
     private JTextField tname;
-    private JTextArea iItems;
+
+    private static InvoiceHeader newInvoice;
+    private static ArrayList<InvoiceLine> tempInvoiceLines;
+    private static final String[] INVOICE_ITEMS_TABLE_COLS = {"No.", "Item Name", "Item Price", "Count", "Item Total"};
+    private JScrollPane invoiceItemsScrollPane;
+    private DefaultTableModel invoiceItemsTableModel;
+    private JTable invoiceItems;
+
+    private JButton addNewItem;
+
     private JButton insert;
     private JButton reset;
     private JButton cancel;
+
+    public static void main(String[] args) {
+        new NewInvoiceForm(null);
+    }
 
     /**
      *
@@ -41,10 +56,12 @@ public class NewInvoiceForm extends JDialog implements ActionListener {
      */
     public NewInvoiceForm(JFrame parentFrame){
         super(parentFrame, "New Invoice", true);
-
         setFormWindowProperties();
-
         renderFormUI();
+    }
+
+    public static ArrayList<InvoiceLine> getTempInvoiceLines() {
+        return tempInvoiceLines;
     }
 
     private void renderFormUI() {
@@ -66,6 +83,8 @@ public class NewInvoiceForm extends JDialog implements ActionListener {
         invNumber.setSize(labelWidth, 20);
         invNumber.setLocation(100, 100);
         c.add(invNumber);
+
+        tempInvoiceLines = new ArrayList<>();
 
         tInvNumber = new JTextField();
         tInvNumber.setText(String.valueOf(Controller.getLatestInvoiceNumber()));
@@ -147,58 +166,47 @@ public class NewInvoiceForm extends JDialog implements ActionListener {
         items.setLocation(100, 250);
         c.add(items);
 
-        JLabel instructions1 = new JLabel("Instructions:");
-        instructions1.setFont(new Font("Arial", Font.PLAIN, 12));
-        instructions1.setText("- Insert one item per line");
-        instructions1.setSize(labelWidth, 70);
-        instructions1.setLocation(100, 270);
-        instructions1.setForeground(Color.red);
-        c.add(instructions1);
+        invoiceItemsTableModel = new DefaultTableModel();
 
-        JLabel instructions2 = new JLabel("Instructions:");
-        instructions2.setFont(new Font("Arial", Font.PLAIN, 12));
-        instructions2.setText("- Use the format:");
-        instructions2.setSize(labelWidth, 70);
-        instructions2.setLocation(100, 290);
-        instructions2.setForeground(Color.red);
-        c.add(instructions2);
+        for (String col : INVOICE_ITEMS_TABLE_COLS){
+            invoiceItemsTableModel.addColumn(col);
+        }
 
-        JLabel instructions3 = new JLabel("Instructions:");
-        instructions3.setFont(new Font("Arial", Font.PLAIN, 12));
-        instructions3.setText("   item_name,unit_price,#_of_units");
-        instructions3.setSize(labelWidth, 70);
-        instructions3.setLocation(100, 305);
-        instructions3.setForeground(Color.red);
-        c.add(instructions3);
-
-        iItems= new JTextArea();
-        iItems.setFont(new Font("Arial", Font.PLAIN, 15));
-        iItems.setSize(FIELD_WIDTH, 100);
-        iItems.setLocation(300, 250);
-        iItems.setLineWrap(true);
-        JScrollPane iItemsSP = new JScrollPane(iItems);
-        iItemsSP.setBounds(iItems.getBounds());
-        c.add(iItemsSP);
+        invoiceItems = new JTable();
+        invoiceItems.setModel(invoiceItemsTableModel);
+        invoiceItemsScrollPane = new JScrollPane(invoiceItems);
+        invoiceItemsScrollPane.setSize(FIELD_WIDTH + labelWidth, 150);
+        invoiceItemsScrollPane.setLocation(100, 300);
+        c.add(invoiceItemsScrollPane);
 
         // Buttons
+
+        addNewItem = new JButton("New Item");
+        addNewItem.setFont(new Font("Arial", Font.PLAIN, 15));
+        addNewItem.setSize(120, 20);
+        addNewItem.setLocation(300, 250);
+        addNewItem.addActionListener(this);
+        c.add(addNewItem);
+
+
         insert = new JButton("Add");
         insert.setFont(new Font("Arial", Font.PLAIN, 15));
         insert.setSize(100, 20);
-        insert.setLocation(150, 450);
+        insert.setLocation(150, 500);
         insert.addActionListener(this);
         c.add(insert);
 
         reset = new JButton("Reset");
         reset.setFont(new Font("Arial", Font.PLAIN, 15));
         reset.setSize(100, 20);
-        reset.setLocation(270, 450);
+        reset.setLocation(270, 500);
         reset.addActionListener(this);
         c.add(reset);
 
         cancel = new JButton("Cancel");
         cancel.setFont(new Font("Arial", Font.PLAIN, 15));
         cancel.setSize(100, 20);
-        cancel.setLocation(390, 450);
+        cancel.setLocation(390, 500);
         cancel.addActionListener(this);
         c.add(cancel);
 
@@ -217,6 +225,9 @@ public class NewInvoiceForm extends JDialog implements ActionListener {
         setVisible(true);
         toFront();
     }
+
+
+
 
     private void setFormWindowProperties() {
         setTitle("New Invoice Form");
@@ -244,12 +255,11 @@ public class NewInvoiceForm extends JDialog implements ActionListener {
     @Override
     public void actionPerformed(ActionEvent e) {
         if (e.getSource() == insert) {
-            if (tname.getText().equals("") || iItems.getText().equals("")){
-                if (tname.getText().equals("")){
-                    JOptionPane.showMessageDialog(null, "Missing Customer Name!", "Missing Customer Name", JOptionPane.WARNING_MESSAGE);
-                } else {
-                    JOptionPane.showMessageDialog(null, "Missing Invoice Items!", "Missing Invoice Items.", JOptionPane.WARNING_MESSAGE);
-                }
+            if (tname.getText().equals("")){
+                JOptionPane.showMessageDialog(null, "Missing Customer Name!", "Missing Customer Name", JOptionPane.WARNING_MESSAGE);
+                System.out.println(invoiceItemsTableModel.getRowCount());
+            } else if (invoiceItemsTableModel.getRowCount() == 0) {
+                JOptionPane.showMessageDialog(null, "Missing Invoice Items!", "Missing Invoice Items", JOptionPane.WARNING_MESSAGE);
             } else {
                 StringBuilder invoiceHeader = new StringBuilder(tInvNumber.getText());
                 invoiceHeader.append(",");
@@ -261,26 +271,21 @@ public class NewInvoiceForm extends JDialog implements ActionListener {
                 invoiceHeader.append(",");
                 invoiceHeader.append(tname.getText());
 
-                String invoiceLines = iItems.getText();
-
-                InvoiceHeader newInvoice = new InvoiceHeader(invoiceHeader.toString());
-                boolean linesAreValid = true;
-
-                for(String str : invoiceLines.split("\n")){
-                    if (InvoiceLine.isValidLine(tInvNumber.getText() + "," + str)){
-                        newInvoice.getInvoiceLines().add(new InvoiceLine(tInvNumber.getText() + "," + str));
-                    } else {
-                        linesAreValid = false;
-                        break;
-                    }
+                newInvoice = new InvoiceHeader(invoiceHeader.toString());
+                for (InvoiceLine line : tempInvoiceLines){
+                    newInvoice.getInvoiceLines().add(line);
                 }
 
-                if (linesAreValid){
-                    Controller.getInvoicesArrayList().add(newInvoice);
-                    dispose();
-                } else {
-                    JOptionPane.showMessageDialog(null, "Invalid invoice items format.", "Invalid Format", JOptionPane.WARNING_MESSAGE);
-                }
+                Controller.getInvoicesArrayList().add(newInvoice);
+                dispose();
+            }
+        } else if (e.getSource() == addNewItem){
+            JDialog nII = new NewInvoiceItemForm(this);
+            nII.setModalityType(Dialog.ModalityType.APPLICATION_MODAL);
+            invoiceItemsTableModel.setRowCount(0);
+
+            for (InvoiceLine line : tempInvoiceLines){
+                invoiceItemsTableModel.addRow(new Object[]{line.getId(), line.getItemName(), line.getItemPrice(), line.getCount(), line.getItemPrice()*line.getCount()});
             }
         } else if (e.getSource() == reset) {
             String def = "";
@@ -288,10 +293,16 @@ public class NewInvoiceForm extends JDialog implements ActionListener {
             date.setSelectedIndex(0);
             month.setSelectedIndex(0);
             year.setSelectedIndex(0);
-            iItems.setText(def);
+
+            // Resetting the invoice items table
+            invoiceItemsTableModel.setRowCount(0);
         } else if (e.getSource() == cancel){
             dispose();
         }
+    }
+
+    public static InvoiceHeader getNewInvoice() {
+        return newInvoice;
     }
 }
 
