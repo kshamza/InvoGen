@@ -342,9 +342,21 @@ public class SIGFrame extends JFrame implements ActionListener {
         addItem.addActionListener(new ActionListener() {
             @Override
             public void actionPerformed(ActionEvent e) {
-                JDialog nII = new NewInvoiceItemForm(frame);
-                nII.setModalityType(Dialog.ModalityType.APPLICATION_MODAL);
-                reloadSelectedInvoiceData("refresh");
+                if (invoices.getSelectedRow() != -1){
+
+                    System.out.println(tempInvoiceLines);
+                    System.out.println(Controller.getInvoicesArrayList().get(Controller.getInvoicesArrayList().size()-1));
+
+                    JDialog nII = new NewInvoiceItemForm(frame);
+                    nII.setModalityType(Dialog.ModalityType.APPLICATION_MODAL);
+                    reloadSelectedInvoiceData("refresh");
+
+                    System.out.println(tempInvoiceLines);
+                    System.out.println(Controller.getInvoicesArrayList().get(Controller.getInvoicesArrayList().size()-1));
+
+                } else {
+                    JOptionPane.showMessageDialog(null, "You have to select an invoice first or create a new one before you add a new item." , "Select an invoice before adding items", JOptionPane.ERROR_MESSAGE);
+                }
             }
         });
 
@@ -355,30 +367,44 @@ public class SIGFrame extends JFrame implements ActionListener {
             @Override
             public void actionPerformed(ActionEvent e) {
 
-                if (invoiceItems.getSelectedRow() == -1){ // This means no line from the invoice items table is selected, print a message
-                    JOptionPane.showMessageDialog(null, "You have to select an invoice item first to delete.", "No Invoice item Selected", JOptionPane.INFORMATION_MESSAGE);
-                } else {
-                    String invoiceItemName = invoiceItems.getValueAt(invoiceItems.getSelectedRow(), 1).toString();
-                    int a = JOptionPane.showConfirmDialog( frame,"Are you sure you want to delete this invoice item?", "Confirm Invoice Item Deletion", JOptionPane.YES_NO_OPTION );
+                if (invoices.getSelectedRow() != -1) {
+                    if (invoiceItems.getSelectedRow() == -1) { // This means no line from the invoice items table is selected, print a message
+                        JOptionPane.showMessageDialog(null, "You have to select an invoice item first to delete.", "No Invoice item Selected", JOptionPane.INFORMATION_MESSAGE);
+                    } else {
 
-                    if (a == 0){ // Selected Yes --> Implement Deletion
-                        // Deletion will be done to the view only until changes are saved.
-                        for (int i = 0 ; i < getTempInvoiceLines().size() ; i++){
-                            if (getTempInvoiceLines().get(i).getItemName().equals(invoiceItemName)){
-                                getTempInvoiceLines().remove(i);
-                                break;
+                        System.out.println(tempInvoiceLines);
+                        System.out.println(Controller.getInvoicesArrayList().get(Controller.getInvoicesArrayList().size()-1));
+
+
+
+                        String invoiceItemName = invoiceItems.getValueAt(invoiceItems.getSelectedRow(), 1).toString();
+                        int a = JOptionPane.showConfirmDialog(frame, "Are you sure you want to delete this invoice item?", "Confirm Invoice Item Deletion", JOptionPane.YES_NO_OPTION);
+
+                        if (a == 0) { // Selected Yes --> Implement Deletion
+                            // Deletion will be done to the view only until changes are saved.
+                            for (int i = 0; i < getTempInvoiceLines().size(); i++) {
+                                if (getTempInvoiceLines().get(i).getItemName().equals(invoiceItemName)) {
+                                    getTempInvoiceLines().remove(i);
+                                    break;
+                                }
                             }
+                            setUpdatedInvoiceLine();
+                            reloadSelectedInvoiceData("refresh");
+                            JOptionPane.showMessageDialog(null, "Remember to save to permanently delete the invoice items.", "Deletion Confirmation", JOptionPane.INFORMATION_MESSAGE);
                         }
-                        setUpdatedInvoiceLine();
-                        reloadSelectedInvoiceData("refresh");
-                        JOptionPane.showMessageDialog(null, "Remember to save to permanently delete the invoice items." , "Deletion Confirmation", JOptionPane.INFORMATION_MESSAGE);
+                        // Otherwise, do nothing.
                     }
-                    // Otherwise, do nothing.
-                }
 
-                // After delete, if the table is not empty, select the first row in the table
-                if (invoiceItemsTableModel.getRowCount() >= 1){
-                    invoiceItems.setRowSelectionInterval(0, 0); // After the update of view, go back and re-select the invoice the user has edited.
+                    // After delete, if the table is not empty, select the first row in the table
+                    if (invoiceItemsTableModel.getRowCount() >= 1) {
+                        invoiceItems.setRowSelectionInterval(0, 0); // After the update of view, go back and re-select the invoice the user has edited.
+                    }
+
+                    System.out.println(tempInvoiceLines);
+                    System.out.println(Controller.getInvoicesArrayList().get(Controller.getInvoicesArrayList().size()-1));
+
+                }else {
+                    JOptionPane.showMessageDialog(null, "You have to select an invoice first or create a new one before you delete an item." , "Select an invoice before deleting items", JOptionPane.ERROR_MESSAGE);
                 }
             }
         });
@@ -498,6 +524,9 @@ public class SIGFrame extends JFrame implements ActionListener {
 
                         int invoiceID = invoices.getSelectedRow(); // Get the row selected to edit that row.
 
+                        System.out.println(tempInvoiceLines);
+                        System.out.println(Controller.getInvoicesArrayList());
+
                         if (isDateFieldEdited){ // Apply change if the date field was edited
                             Controller.getInvoicesArrayList().get(invoiceID).setInvoiceDate(updatedDate);
                         }
@@ -518,6 +547,11 @@ public class SIGFrame extends JFrame implements ActionListener {
                         updatedCustomerName = null;
                         isDateFieldEdited = false;
                         isCustomerNameFieldEdited = false;
+
+
+                        System.out.println(tempInvoiceLines);
+                        System.out.println(Controller.getInvoicesArrayList());
+
                     }
                 }
                 break;
@@ -546,6 +580,11 @@ public class SIGFrame extends JFrame implements ActionListener {
                 if (invoices.getSelectedRow() == -1){ // This means no line from the main table is selected, print a message
                     JOptionPane.showMessageDialog(null, "You have to select an invoice first to delete.", "No Invoice Selected", JOptionPane.INFORMATION_MESSAGE);
                 } else {
+
+                    System.out.println(tempInvoiceLines);
+                    System.out.println(Controller.getInvoicesArrayList().get(Controller.getInvoicesArrayList().size()-1));
+
+
                     int invoiceID = Integer.valueOf(invoices.getValueAt(invoices.getSelectedRow(), 0).toString());
                     int a = JOptionPane.showConfirmDialog( this,"Are you sure you want to delete this invoice?", "Confirm Invoice Deletion", JOptionPane.YES_NO_OPTION );
 
@@ -569,6 +608,11 @@ public class SIGFrame extends JFrame implements ActionListener {
                 if (invoicesTableModel.getRowCount() >= 1){
                     invoices.setRowSelectionInterval(0, 0); // After the update of view, go back and re-select the invoice the user has edited.
                 }
+
+
+                System.out.println(tempInvoiceLines);
+                System.out.println(Controller.getInvoicesArrayList().get(Controller.getInvoicesArrayList().size()-1));
+
 
                 break;
             case "cancel":

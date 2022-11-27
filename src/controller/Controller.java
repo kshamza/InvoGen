@@ -17,12 +17,11 @@ import java.util.HashMap;
 
 public final class Controller {
 
-    private static String[][] invoicesArray;
-    private static ArrayList<InvoiceHeader> invoicesArrayList;
+    private static String[][] invoicesArray; // 2D array representing invoices
+    private static ArrayList<InvoiceHeader> invoicesArrayList; // ArrayList representing invoices
     private static int latestInvoiceNumber; // The highest invoice number after loading. Used to give a new number for the next new invoice.
-    private static HashMap<Integer, String[][]> invoiceLinesMap;
-
-    private static HashMap<Integer, ArrayList<InvoiceLine>> invoiceLinesArrayListMap;
+    private static HashMap<Integer, String[][]> invoiceLinesMap; // HashMap representing invoice lines with Integer-String[][] paris
+    private static HashMap<Integer, ArrayList<InvoiceLine>> invoiceLinesArrayListMap;// HashMap representing invoice lines with Integer-ArrayList paris
 
     private static boolean headerFileExist;
     private static boolean headerFileMalformed;
@@ -53,8 +52,6 @@ public final class Controller {
 
 
             ArrayList<InvoiceLine> invoiceLineArrayList;
-            int linesCount;
-            String[][] tempInvoiceLinesArray;
 
             for (int i = 0 ; i < invoicesCount ; i++){
 
