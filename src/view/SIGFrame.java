@@ -2,6 +2,7 @@ package view;
 
 import controller.Controller;
 import model.InvoiceHeader;
+import model.InvoiceLine;
 
 import javax.swing.*;
 import javax.swing.event.ListSelectionEvent;
@@ -9,6 +10,7 @@ import javax.swing.event.ListSelectionListener;
 import javax.swing.table.DefaultTableModel;
 import java.awt.*;
 import java.awt.event.*;
+import java.util.ArrayList;
 
 /**
  * A class that represents the main frame of the SIG application
@@ -42,6 +44,9 @@ public class SIGFrame extends JFrame implements ActionListener {
     // Right Panel
     private JPanel rightPanel;
     private JPanel rightTableSubPanel;
+
+    private static ArrayList<InvoiceLine> tempInvoiceLines;
+
     private JPanel rightButtonsSubPanel;
     private JPanel invoiceDataSubPanel;
 
@@ -50,6 +55,7 @@ public class SIGFrame extends JFrame implements ActionListener {
     private JTextField invDateField;
     private boolean isDateFieldEdited = false;
     private String updatedDate;
+    private static boolean updatedInvoiceLine;
 
     private JTextField invCustomerNameField;
     private boolean isCustomerNameFieldEdited = false;
@@ -67,7 +73,7 @@ public class SIGFrame extends JFrame implements ActionListener {
 
         setWindowProperties();
         renderMenuBar();
-        renderRightPanel();
+        renderRightPanel(this);
         renderLeftPanel();
 
         // Add components to the frame
@@ -126,11 +132,11 @@ public class SIGFrame extends JFrame implements ActionListener {
         setVisible(true);
     }
 
-    private void renderRightPanel() {
+    private void renderRightPanel(JFrame frame) {
         rightPanel = new JPanel(new BorderLayout());
         rightPanel.setLayout(new BoxLayout(rightPanel, BoxLayout.Y_AXIS));
         renderInvoiceDataSubPanel();
-        renderRightTableSubPanel();
+        renderRightTableSubPanel(frame);
         renderRightButtonSubPanel();
     }
 
@@ -216,7 +222,7 @@ public class SIGFrame extends JFrame implements ActionListener {
                         if (updatedDate.isEmpty() || updatedDate.isBlank()){ // If the name became empty or spaces, we show an error message and reload the currently selected row.
                             JOptionPane.showMessageDialog(null, "The invoice date can not be empty.", "Missing invoice date", JOptionPane.ERROR_MESSAGE);
                             updatedDate = null; // Are you sure?
-                            reloadSelectedInvoiceDate();
+                            reloadSelectedInvoiceData("cancel");
                         } else if (!Controller.getInvoicesArrayList().get(invoiceID).getInvoiceDate().equals(updatedDate)){
                             // We have a new String that we need to check if it is valid.
                             if (InvoiceHeader.isValidDate(updatedDate)){
@@ -224,7 +230,7 @@ public class SIGFrame extends JFrame implements ActionListener {
                             } else {
                                 JOptionPane.showMessageDialog(null, "Invalid Date. Use format dd-mm-yyyy", "Wrong date format", JOptionPane.ERROR_MESSAGE);
                                 updatedDate = null;
-                                reloadSelectedInvoiceDate();
+                                reloadSelectedInvoiceData("cancel");
                             }
                         } else { // It was clicked, but the String never changed, we reset the updatedDate to indicate no change at exit
                             updatedDate = null;
@@ -272,7 +278,7 @@ public class SIGFrame extends JFrame implements ActionListener {
                         if (updatedCustomerName.isEmpty() || updatedCustomerName.isBlank()){ // If the name became empty or spaces, we show an error message and reload the currently selected row.
                             JOptionPane.showMessageDialog(null, "The customer name can not be empty.", "Missing customer name", JOptionPane.ERROR_MESSAGE);
                             updatedCustomerName = null; // Are you sure?
-                            reloadSelectedInvoiceDate();
+                            reloadSelectedInvoiceData("cancel");
                         } else if (!Controller.getInvoicesArrayList().get(invoiceID).getCustomerName().equals(updatedCustomerName)){
                             // We need to set the flag that it has changed to be true, so we can write it back and save.
                             isCustomerNameFieldEdited = true;
@@ -319,11 +325,77 @@ public class SIGFrame extends JFrame implements ActionListener {
         resetInvoiceDataDisplay();
     }
 
-    private void renderRightTableSubPanel(){
+    private void renderRightTableSubPanel(JFrame frame){
         // Invoice Items
         rightTableSubPanel = new JPanel(new BorderLayout());
 
         rightTableSubPanel.setLayout(new BoxLayout(rightTableSubPanel, BoxLayout.Y_AXIS));
+
+
+        JPanel rightTableButtonsSubPanel = new JPanel(new BorderLayout());
+        rightTableButtonsSubPanel.setLayout(new GridLayout(1,3));
+        JButton addItem= new JButton("Create Item");
+        addItem.setFont(new Font("Arial", Font.PLAIN, 15));
+        addItem.setActionCommand("newItem");
+        addItem.addActionListener(this);
+        addItem.addActionListener(new ActionListener() {
+            @Override
+            public void actionPerformed(ActionEvent e) {
+                if (invoices.getSelectedRow() != -1){
+                    JDialog nII = new NewInvoiceItemForm(frame);
+                    nII.setModalityType(Dialog.ModalityType.APPLICATION_MODAL);
+                    reloadSelectedInvoiceData("refresh");
+                } else {
+                    JOptionPane.showMessageDialog(null, "You have to select an invoice first or create a new one before you add a new item." , "Select an invoice before adding items", JOptionPane.ERROR_MESSAGE);
+                }
+            }
+        });
+
+        JButton deleteItem = new JButton("Delete Item");
+        deleteItem.setFont(new Font("Arial", Font.PLAIN, 15));
+        deleteItem.setActionCommand("deleteItem");
+        deleteItem.addActionListener(new ActionListener() {
+            @Override
+            public void actionPerformed(ActionEvent e) {
+
+                if (invoices.getSelectedRow() != -1) {
+                    if (invoiceItems.getSelectedRow() == -1) { // This means no line from the invoice items table is selected, print a message
+                        JOptionPane.showMessageDialog(null, "You have to select an invoice item first to delete.", "No Invoice item Selected", JOptionPane.INFORMATION_MESSAGE);
+                    } else {
+                        String invoiceItemName = invoiceItems.getValueAt(invoiceItems.getSelectedRow(), 1).toString();
+                        int a = JOptionPane.showConfirmDialog(frame, "Are you sure you want to delete this invoice item?", "Confirm Invoice Item Deletion", JOptionPane.YES_NO_OPTION);
+
+                        if (a == 0) { // Selected Yes --> Implement Deletion
+                            // Deletion will be done to the view only until changes are saved.
+                            for (int i = 0; i < getTempInvoiceLines().size(); i++) {
+                                if (getTempInvoiceLines().get(i).getItemName().equals(invoiceItemName)) {
+                                    getTempInvoiceLines().remove(i);
+                                    break;
+                                }
+                            }
+                            setUpdatedInvoiceLine();
+                            reloadSelectedInvoiceData("refresh");
+                            JOptionPane.showMessageDialog(null, "Remember to save to permanently delete the invoice items.\n\nInvoice total is inaccurate until you save changes!", "Deletion Confirmation", JOptionPane.INFORMATION_MESSAGE);
+                        }
+                        // Otherwise, do nothing.
+                    }
+
+                    // After delete, if the table is not empty, select the first row in the table
+                    if (invoiceItemsTableModel.getRowCount() >= 1) {
+                        invoiceItems.setRowSelectionInterval(0, 0); // After the update of view, go back and re-select the invoice the user has edited.
+                    }
+                }else {
+                    JOptionPane.showMessageDialog(null, "You have to select an invoice first or create a new one before you delete an item." , "Select an invoice before deleting items", JOptionPane.ERROR_MESSAGE);
+                }
+            }
+        });
+
+
+        // Distributing the two buttons over a row of five columns.
+        rightTableButtonsSubPanel.add(addItem);
+        rightTableButtonsSubPanel.add(Box.createRigidArea(new Dimension(5, 0)));
+        rightTableButtonsSubPanel.add(deleteItem);
+        rightTableSubPanel.add(rightTableButtonsSubPanel);
 
         invoiceItemsTableModel = new DefaultTableModel();
 
@@ -380,7 +452,7 @@ public class SIGFrame extends JFrame implements ActionListener {
             public void valueChanged(ListSelectionEvent event) {
                 if (!event.getValueIsAdjusting() && invoices.getSelectedRow() != -1){
                     // Condition to prevent calling the event twice for each selection
-                    reloadSelectedInvoiceDate();
+                    reloadSelectedInvoiceData("cancel");
                 }
             }
         });
@@ -427,9 +499,9 @@ public class SIGFrame extends JFrame implements ActionListener {
                 if (invoices.getSelectedRow() == -1) { // No invoice is selected
                     JOptionPane.showMessageDialog(null, "You have to select an invoice first to edit and save.", "No Invoice Selected", JOptionPane.INFORMATION_MESSAGE);
                 } else {
-                    if (!isDateFieldEdited && !isCustomerNameFieldEdited){  // If no changes detected, then inform the user that no changes to save.
+                    if (!isDateFieldEdited && !isCustomerNameFieldEdited && !updatedInvoiceLine){  // If no changes detected, then inform the user that no changes to save.
                         JOptionPane.showMessageDialog(null, "No changes to save!", "Unchanged Data", JOptionPane.PLAIN_MESSAGE);
-                    } else { // At least one of the two data has been changed, we need to save it.
+                    } else { // At least one of the three has been changed, we need to save it.
 
                         int invoiceID = invoices.getSelectedRow(); // Get the row selected to edit that row.
 
@@ -439,6 +511,10 @@ public class SIGFrame extends JFrame implements ActionListener {
 
                         if (isCustomerNameFieldEdited){ // Apply change if the customer name field was edited
                             Controller.getInvoicesArrayList().get(invoiceID).setCustomerName(updatedCustomerName);
+                        }
+
+                        if (updatedInvoiceLine){
+                            Controller.getInvoicesArrayList().get(invoiceID).setInvoiceLines(tempInvoiceLines);
                         }
 
                         // TODO Maybe we can separate the update file and update view this way we can save operation on updating the view.
@@ -459,8 +535,8 @@ public class SIGFrame extends JFrame implements ActionListener {
             case "new":
                 if (Controller.getHeaderFileExist() && Controller.getLinesFileExist()){ // Allow saving only if proper files are selected.
                     // Reset any edits before heading to new invoice form.
-                    if (isDateFieldEdited || isCustomerNameFieldEdited) {
-                        resetChangedFields();
+                    if (isDateFieldEdited || isCustomerNameFieldEdited || updatedInvoiceLine) {
+                        cancelAllChanges();
                     }
 
                     JDialog nI = new NewInvoiceForm(this);
@@ -481,7 +557,7 @@ public class SIGFrame extends JFrame implements ActionListener {
                 if (invoices.getSelectedRow() == -1){ // This means no line from the main table is selected, print a message
                     JOptionPane.showMessageDialog(null, "You have to select an invoice first to delete.", "No Invoice Selected", JOptionPane.INFORMATION_MESSAGE);
                 } else {
-                    int invoiceID = Integer.valueOf(invoices.getValueAt(invoices.getSelectedRow(), 0).toString());
+                      int invoiceID = Integer.valueOf(invoices.getValueAt(invoices.getSelectedRow(), 0).toString());
                     int a = JOptionPane.showConfirmDialog( this,"Are you sure you want to delete this invoice?", "Confirm Invoice Deletion", JOptionPane.YES_NO_OPTION );
 
                     if (a == 0){ // Selected Yes --> Implement Deletion
@@ -504,14 +580,13 @@ public class SIGFrame extends JFrame implements ActionListener {
                 if (invoicesTableModel.getRowCount() >= 1){
                     invoices.setRowSelectionInterval(0, 0); // After the update of view, go back and re-select the invoice the user has edited.
                 }
-
                 break;
             case "cancel":
-                if (invoices.getSelectedRow() != -1 && (updatedCustomerName != null || updatedDate != null)){
+                if (invoices.getSelectedRow() != -1 && (updatedCustomerName != null || updatedDate != null || updatedInvoiceLine )){
                     // This means a line from the main table is selected and some edits have been performed
                     // Cancel will just reload the invoice again to overwrite any changes that may have been done to the invoice
-                    reloadSelectedInvoiceDate();
-                    resetChangedFields();
+//                    reloadSelectedInvoiceData("cancel");
+                    cancelAllChanges();
                 }
         }
     }
@@ -576,6 +651,7 @@ public class SIGFrame extends JFrame implements ActionListener {
                     JOptionPane.showMessageDialog(null, "You will need to load InvoiceLine.csv after loading the InvoiceHeader.csv file.\n\nTo load the files:\n1- Select File --> Load, or \n2- Press ctrl + L" , "Header File is not loaded", JOptionPane.WARNING_MESSAGE);
                     resetTotalView();
                 } else {
+
                     String[][] invoicesArray = Controller.getInvoicesArray();
 
                     // Adding the fetched invoices to the table
@@ -604,11 +680,12 @@ public class SIGFrame extends JFrame implements ActionListener {
      *
      * @param invoiceID an <code>int</code> that represents the id of the invoice selected in the table of invoices.
      */
-    private void loadSelectedInvoiceData(int invoiceID){
+    private void loadSelectedInvoiceData(int invoiceID, String mode){
 
         if (Controller.getLinesFileMalformed()){
             resetInvoiceDataDisplay();
         } else {
+
             // We have to find index of the invoice corresponding to the invoiceID
             String[][] tempArray = Controller.getInvoicesArray();
 
@@ -637,7 +714,18 @@ public class SIGFrame extends JFrame implements ActionListener {
             invCustomerNameField.setText(tempArray[idx][2]);
             invTotalField.setText(tempArray[idx][3]);
 
-            String[][] invoiceItemsArray = Controller.getInvoiceListArray(invoiceID);
+            String[][] invoiceItemsArray = new String[0][];
+
+            if (mode.equals("cancel")){
+                resetChangedFields();
+                Controller.load("no-prompt"); // re-load the data
+                tempInvoiceLines = Controller.getInvoiceLineArrayList(invoiceID); // Reload the tempInvoiceLines from the Controller and remove any added new lines.
+                invoiceItemsArray = Controller.getInvoiceListArray(invoiceID);
+
+            } else if (mode.equals("refresh")) {
+//                tempInvoiceLines = Controller.getInvoiceLineArrayList(invoiceID);
+                invoiceItemsArray = Controller.invoiceLinesArrayListToArray(invoiceID, tempInvoiceLines);
+            }
 
             // Resetting the invoice items table
             invoiceItemsTableModel.setRowCount(0);
@@ -660,8 +748,8 @@ public class SIGFrame extends JFrame implements ActionListener {
      * It utilizes the <code>LoadSelectedInvoiceData</code> method by passing to it the current selected invoice from
      * the table.
      */
-    private void reloadSelectedInvoiceDate(){
-        loadSelectedInvoiceData(Integer.valueOf(invoices.getValueAt(invoices.getSelectedRow(), 0).toString()));
+    private void reloadSelectedInvoiceData(String mode){
+        loadSelectedInvoiceData(Integer.valueOf(invoices.getValueAt(invoices.getSelectedRow(), 0).toString()), mode);
     }
 
     /**
@@ -684,6 +772,11 @@ public class SIGFrame extends JFrame implements ActionListener {
         }
     }
 
+
+    private void cancelAllChanges(){
+        reloadSelectedInvoiceData("cancel");
+    }
+
     /**
      * A method that is used to reset the changed date and customer name fields.
      */
@@ -692,13 +785,14 @@ public class SIGFrame extends JFrame implements ActionListener {
         updatedDate = null;
         isDateFieldEdited = false;
         isCustomerNameFieldEdited = false;
+        resetUpdatedInvoiceLine();
     }
 
     /**
      * A method that performs pre-exit check on any changes that may have been done to the Date and Customer Name fields.
      */
     private void executeExitCheck(){
-        if (updatedDate == null && updatedCustomerName == null){ // No changes detected, exit.
+        if (updatedDate == null && updatedCustomerName == null && !updatedInvoiceLine){ // No changes detected, exit.
             dispose();
         } else { // Changes detected, confirm that the user does not want to save the changes.
             int a = JOptionPane.showConfirmDialog(this, "Are you sure you want to exit without saving your data?", "Confirm Exit Without Saving", JOptionPane.YES_NO_OPTION);
@@ -708,4 +802,18 @@ public class SIGFrame extends JFrame implements ActionListener {
             // Otherwise, get back to the app.
         }
     }
+
+
+    public static void setUpdatedInvoiceLine(){
+        updatedInvoiceLine = true;
+    }
+
+    public static void resetUpdatedInvoiceLine(){
+        updatedInvoiceLine = false;
+    }
+
+    public static ArrayList<InvoiceLine> getTempInvoiceLines() {
+        return tempInvoiceLines;
+    }
+
 }

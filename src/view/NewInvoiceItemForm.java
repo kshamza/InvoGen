@@ -18,11 +18,28 @@ public class NewInvoiceItemForm extends JDialog implements ActionListener  {
     private JButton reset;
     private JButton cancel;
 
+    /**
+     * An overloaded invoice item constructor that takes a JDialog as an input.
+     *
+     * @param parentDialog
+     */
     public NewInvoiceItemForm(JDialog parentDialog){
         super(parentDialog, "New Invoice Item", true);
         setFormWindowProperties();
-        renderFormUI();
+        renderFormUI(parentDialog);
     }
+
+    /**
+     * An overloaded invoice item constructor that takes a JFrame as an input.
+     *
+     * @param parentDialog
+     */
+    public NewInvoiceItemForm(JFrame parentDialog){
+        super(parentDialog, "New Invoice Item", true);
+        setFormWindowProperties();
+        renderFormUI(parentDialog);
+    }
+
 
     private void setFormWindowProperties() {
         setTitle("New Invoice Item");
@@ -46,7 +63,8 @@ public class NewInvoiceItemForm extends JDialog implements ActionListener  {
         setResizable(false);
     }
 
-    private void renderFormUI() {
+    // I will use the source of the call to the NewInvoiceItemForm.java to decide which ArrayList of invoices should I edit, the new one or the loaded one in the main view.
+    private void renderFormUI(RootPaneContainer parentDialog) {
         // Components of the Form
         Container c = getContentPane();
         c.setLayout(null);
@@ -105,7 +123,48 @@ public class NewInvoiceItemForm extends JDialog implements ActionListener  {
         insert.setFont(new Font("Arial", Font.PLAIN, 15));
         insert.setSize(100, 20);
         insert.setLocation(150, 270);
-        insert.addActionListener(this);
+
+        insert.addActionListener(new ActionListener() {
+            @Override
+            public void actionPerformed(ActionEvent e) {
+                if (tItemName.getText().isBlank() || tItemName.getText().isEmpty()){
+                    JOptionPane.showMessageDialog(null, "Missing Item Name!", "Missing Item Name", JOptionPane.WARNING_MESSAGE);
+                } else if (tItemPrice.getText().isBlank() || tItemPrice.getText().isEmpty()){
+                    JOptionPane.showMessageDialog(null, "Missing Item Price!", "Missing Item Price", JOptionPane.WARNING_MESSAGE);
+                } else if (tItemCount.getText().isBlank() || tItemCount.getText().isEmpty()){
+                    JOptionPane.showMessageDialog(null, "Missing Item Count!", "Missing Item Count", JOptionPane.WARNING_MESSAGE);
+                } else { // All data are entered, we need to validate the input.
+                    StringBuilder invoiceItem = new StringBuilder();
+
+                    if (parentDialog instanceof JDialog){
+                        invoiceItem .append(Controller.getLatestInvoiceNumber());
+                    } else if (parentDialog instanceof SIGFrame) {
+                        invoiceItem .append(SIGFrame.getTempInvoiceLines().get(0).getId());
+                    }
+
+                    invoiceItem.append(",");
+                    invoiceItem.append(tItemName.getText());
+                    invoiceItem.append(",");
+                    invoiceItem.append(tItemPrice.getText());
+                    invoiceItem.append(",");
+                    invoiceItem.append(tItemCount.getText());
+                    String lineValidityConfirmation = InvoiceLine.isValidLine(invoiceItem.toString());
+                    if (!lineValidityConfirmation.equals("")){
+                        JOptionPane.showMessageDialog(null, lineValidityConfirmation, "Invalid Item", JOptionPane.WARNING_MESSAGE);
+                    } else { // Valid line, no returned error message.
+                        if (parentDialog instanceof JDialog){
+                            NewInvoiceForm.getTempInvoiceLines().add(new InvoiceLine(invoiceItem.toString()));
+                        } else if (parentDialog instanceof SIGFrame) {
+                            SIGFrame.getTempInvoiceLines().add(new InvoiceLine(invoiceItem.toString()));
+                            SIGFrame.setUpdatedInvoiceLine();
+                            JOptionPane.showMessageDialog(null, "Invoice total is inaccurate until you save changes!", "Inaccurate Invoice Total", JOptionPane.WARNING_MESSAGE);
+                        }
+                        dispose();
+                    }
+                }
+            }
+        });
+
         c.add(insert);
 
         reset = new JButton("Reset");
@@ -125,8 +184,8 @@ public class NewInvoiceItemForm extends JDialog implements ActionListener  {
         // Dispose the new invoice form when esc is pressed.
         // Obtained from: https://gist.github.com/smamran/0a33dfabb339590aab7e
         getRootPane().getInputMap(JComponent.WHEN_IN_FOCUSED_WINDOW).put(
-                KeyStroke.getKeyStroke(KeyEvent.VK_ESCAPE, 0), "Cancel");
-        getRootPane().getActionMap().put("Cancel", new AbstractAction()
+                KeyStroke.getKeyStroke(KeyEvent.VK_ESCAPE, 0), "cancel");
+        getRootPane().getActionMap().put("cancel", new AbstractAction()
         {
             public void actionPerformed(ActionEvent e)
             {
@@ -140,36 +199,12 @@ public class NewInvoiceItemForm extends JDialog implements ActionListener  {
 
     @Override
     public void actionPerformed(ActionEvent e) {
-        if (e.getSource() == insert) {
-            if (tItemName.getText().isBlank() || tItemName.getText().isEmpty()){
-                JOptionPane.showMessageDialog(null, "Missing Item Name!", "Missing Item Name", JOptionPane.WARNING_MESSAGE);
-            } else if (tItemPrice.getText().isBlank() || tItemPrice.getText().isEmpty()){
-                JOptionPane.showMessageDialog(null, "Missing Item Price!", "Missing Item Price", JOptionPane.WARNING_MESSAGE);
-            } else if (tItemCount.getText().isBlank() || tItemCount.getText().isEmpty()){
-                JOptionPane.showMessageDialog(null, "Missing Item Count!", "Missing Item Count", JOptionPane.WARNING_MESSAGE);
-            } else { // All data are entered, we need to validate the input.
-                StringBuilder invoiceItem = new StringBuilder(String.valueOf(Controller.getLatestInvoiceNumber()));
-                invoiceItem.append(",");
-                invoiceItem.append(tItemName.getText());
-                invoiceItem.append(",");
-                invoiceItem.append(tItemPrice.getText());
-                invoiceItem.append(",");
-                invoiceItem.append(tItemCount.getText());
-
-                String lineValidityConfirmation = InvoiceLine.isValidLine(invoiceItem.toString());
-
-                if (!lineValidityConfirmation.equals("")){
-                    JOptionPane.showMessageDialog(null, lineValidityConfirmation, "Invalid Item", JOptionPane.WARNING_MESSAGE);
-                } else { // Valid line, no returned error message.
-                    NewInvoiceForm.getTempInvoiceLines().add(new InvoiceLine(invoiceItem.toString()));
-                    dispose();
-                }
-            }
-        } else if (e.getSource() == reset) {
+        if (e.getSource() == reset) {
             String def = "";
             tItemName.setText(def);
             tItemPrice.setText(def);
             tItemCount.setText(def);
+
         } else if (e.getSource() == cancel){
             dispose();
         }
