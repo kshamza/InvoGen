@@ -679,11 +679,12 @@ public class SIGFrame extends JFrame implements ActionListener {
             invTotalField.setText(tempArray[idx][3]);
 
             String[][] invoiceItemsArray = new String[0][];
-            tempInvoiceLines = Controller.getInvoiceLineArrayList(invoiceID);
 
             if (mode.equals("cancel")){
+                tempInvoiceLines = Controller.getInvoiceLineArrayList(invoiceID); // Reload the tempInvoiceLines from the Controller and remove any added new lines.
                 invoiceItemsArray = Controller.getInvoiceListArray(invoiceID);
             } else if (mode.equals("refresh")) {
+                tempInvoiceLines = Controller.getInvoiceLineArrayList(invoiceID);
                 invoiceItemsArray = Controller.invoiceLinesArrayListToArray(invoiceID, tempInvoiceLines);
             }
 

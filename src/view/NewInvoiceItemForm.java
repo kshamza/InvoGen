@@ -177,8 +177,8 @@ public class NewInvoiceItemForm extends JDialog implements ActionListener  {
         // Dispose the new invoice form when esc is pressed.
         // Obtained from: https://gist.github.com/smamran/0a33dfabb339590aab7e
         getRootPane().getInputMap(JComponent.WHEN_IN_FOCUSED_WINDOW).put(
-                KeyStroke.getKeyStroke(KeyEvent.VK_ESCAPE, 0), "Cancel");
-        getRootPane().getActionMap().put("Cancel", new AbstractAction()
+                KeyStroke.getKeyStroke(KeyEvent.VK_ESCAPE, 0), "cancel");
+        getRootPane().getActionMap().put("cancel", new AbstractAction()
         {
             public void actionPerformed(ActionEvent e)
             {
