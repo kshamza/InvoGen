@@ -134,7 +134,14 @@ public class NewInvoiceItemForm extends JDialog implements ActionListener  {
                 } else if (tItemCount.getText().isBlank() || tItemCount.getText().isEmpty()){
                     JOptionPane.showMessageDialog(null, "Missing Item Count!", "Missing Item Count", JOptionPane.WARNING_MESSAGE);
                 } else { // All data are entered, we need to validate the input.
-                    StringBuilder invoiceItem = new StringBuilder(String.valueOf(Controller.getLatestInvoiceNumber()));
+                    StringBuilder invoiceItem = new StringBuilder();
+
+                    if (parentDialog instanceof JDialog){
+                        invoiceItem .append(Controller.getLatestInvoiceNumber());
+                    } else if (parentDialog instanceof SIGFrame) {
+                        invoiceItem .append(SIGFrame.getTempInvoiceLines().get(0).getId());
+                    }
+
                     invoiceItem.append(",");
                     invoiceItem.append(tItemName.getText());
                     invoiceItem.append(",");

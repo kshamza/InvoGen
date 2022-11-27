@@ -358,13 +358,13 @@ public class SIGFrame extends JFrame implements ActionListener {
                 if (invoiceItems.getSelectedRow() == -1){ // This means no line from the invoice items table is selected, print a message
                     JOptionPane.showMessageDialog(null, "You have to select an invoice item first to delete.", "No Invoice item Selected", JOptionPane.INFORMATION_MESSAGE);
                 } else {
-                    int invoiceItemID = Integer.valueOf(invoiceItems.getValueAt(invoiceItems.getSelectedRow(), 0).toString());
+                    String invoiceItemName = invoiceItems.getValueAt(invoiceItems.getSelectedRow(), 1).toString();
                     int a = JOptionPane.showConfirmDialog( frame,"Are you sure you want to delete this invoice item?", "Confirm Invoice Item Deletion", JOptionPane.YES_NO_OPTION );
 
                     if (a == 0){ // Selected Yes --> Implement Deletion
                         // Deletion will be done to the view only until changes are saved.
                         for (int i = 0 ; i < getTempInvoiceLines().size() ; i++){
-                            if (getTempInvoiceLines().get(i).getId() == invoiceItemID){
+                            if (getTempInvoiceLines().get(i).getItemName().equals(invoiceItemName)){
                                 getTempInvoiceLines().remove(i);
                                 break;
                             }
@@ -506,12 +506,6 @@ public class SIGFrame extends JFrame implements ActionListener {
                             Controller.getInvoicesArrayList().get(invoiceID).setCustomerName(updatedCustomerName);
                         }
 
-                        if (updatedInvoiceLine){
-                            System.out.println(tempInvoiceLines);
-                            System.out.println(Controller.getInvoicesArrayList().get(invoiceID).getInvoiceLines().equals(tempInvoiceLines));
-                            Controller.getInvoicesArrayList().get(invoiceID).setInvoiceLines(tempInvoiceLines);
-                        }
-
                         // TODO Maybe we can separate the update file and update view this way we can save operation on updating the view.
                         updateFilesAndView(); // Update the file and view by saving the updated table, then reload the data to update the view.
                         invoices.setRowSelectionInterval(invoiceID, invoiceID); // After the update of view, go back and re-select the invoice the user has edited.
@@ -531,7 +525,7 @@ public class SIGFrame extends JFrame implements ActionListener {
                 if (Controller.getHeaderFileExist() && Controller.getLinesFileExist()){ // Allow saving only if proper files are selected.
                     // Reset any edits before heading to new invoice form.
                     if (isDateFieldEdited || isCustomerNameFieldEdited || updatedInvoiceLine) {
-                        resetChangedFields();
+                        cancelAllChanges();
                     }
 
                     JDialog nI = new NewInvoiceForm(this);
@@ -582,7 +576,7 @@ public class SIGFrame extends JFrame implements ActionListener {
                     // This means a line from the main table is selected and some edits have been performed
                     // Cancel will just reload the invoice again to overwrite any changes that may have been done to the invoice
 //                    reloadSelectedInvoiceData("cancel");
-                    resetChangedFields();
+                    cancelAllChanges();
                 }
         }
     }
@@ -681,6 +675,7 @@ public class SIGFrame extends JFrame implements ActionListener {
         if (Controller.getLinesFileMalformed()){
             resetInvoiceDataDisplay();
         } else {
+
             // We have to find index of the invoice corresponding to the invoiceID
             String[][] tempArray = Controller.getInvoicesArray();
 
@@ -712,9 +707,11 @@ public class SIGFrame extends JFrame implements ActionListener {
             String[][] invoiceItemsArray = new String[0][];
 
             if (mode.equals("cancel")){
+                resetChangedFields();
                 Controller.load("no-prompt"); // re-load the data
                 tempInvoiceLines = Controller.getInvoiceLineArrayList(invoiceID); // Reload the tempInvoiceLines from the Controller and remove any added new lines.
                 invoiceItemsArray = Controller.getInvoiceListArray(invoiceID);
+
             } else if (mode.equals("refresh")) {
 //                tempInvoiceLines = Controller.getInvoiceLineArrayList(invoiceID);
                 invoiceItemsArray = Controller.invoiceLinesArrayListToArray(invoiceID, tempInvoiceLines);
@@ -765,11 +762,15 @@ public class SIGFrame extends JFrame implements ActionListener {
         }
     }
 
+
+    private void cancelAllChanges(){
+        reloadSelectedInvoiceData("cancel");
+    }
+
     /**
      * A method that is used to reset the changed date and customer name fields.
      */
     private void resetChangedFields(){
-        reloadSelectedInvoiceData("cancel");
         updatedCustomerName = null;
         updatedDate = null;
         isDateFieldEdited = false;
