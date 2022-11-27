@@ -4,6 +4,7 @@ import model.FileOperations;
 import model.InvoiceHeader;
 import model.InvoiceLine;
 
+import java.sql.Array;
 import java.util.ArrayList;
 import java.util.HashMap;
 
@@ -127,7 +128,9 @@ public final class Controller {
     }
 
     public static ArrayList<InvoiceLine> getInvoiceLineArrayList(int invoiceNum) {
-        return invoiceLinesArrayListMap.get(invoiceNum);
+//        return invoiceLinesArrayListMap.get(invoiceNum);
+
+        return new ArrayList<>(invoiceLinesArrayListMap.get(invoiceNum));
     }
 
     public static int getLatestInvoiceNumber(){

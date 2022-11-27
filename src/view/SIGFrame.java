@@ -390,7 +390,7 @@ public class SIGFrame extends JFrame implements ActionListener {
                             }
                             setUpdatedInvoiceLine();
                             reloadSelectedInvoiceData("refresh");
-                            JOptionPane.showMessageDialog(null, "Remember to save to permanently delete the invoice items.", "Deletion Confirmation", JOptionPane.INFORMATION_MESSAGE);
+                            JOptionPane.showMessageDialog(null, "Remember to save to permanently delete the invoice items.\n\nInvoice total is inaccurate until you save changes!", "Deletion Confirmation", JOptionPane.INFORMATION_MESSAGE);
                         }
                         // Otherwise, do nothing.
                     }
@@ -533,6 +533,10 @@ public class SIGFrame extends JFrame implements ActionListener {
 
                         if (isCustomerNameFieldEdited){ // Apply change if the customer name field was edited
                             Controller.getInvoicesArrayList().get(invoiceID).setCustomerName(updatedCustomerName);
+                        }
+
+                        if (updatedInvoiceLine){
+                            Controller.getInvoicesArrayList().get(invoiceID).setInvoiceLines(tempInvoiceLines);
                         }
 
                         // TODO Maybe we can separate the update file and update view this way we can save operation on updating the view.
