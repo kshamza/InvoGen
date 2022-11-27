@@ -147,8 +147,10 @@ public class NewInvoiceItemForm extends JDialog implements ActionListener  {
                     } else { // Valid line, no returned error message.
                         if (parentDialog instanceof JDialog){
                             NewInvoiceForm.getTempInvoiceLines().add(new InvoiceLine(invoiceItem.toString()));
-                        } else if (parentDialog instanceof JFrame) {
+                        } else if (parentDialog instanceof SIGFrame) {
                             SIGFrame.getTempInvoiceLines().add(new InvoiceLine(invoiceItem.toString()));
+                            SIGFrame.setUpdatedInvoiceLine();
+                            JOptionPane.showMessageDialog(null, "Invoice total is inaccurate until you save changes!", "Inaccurate Invoice Total", JOptionPane.WARNING_MESSAGE);
                         }
                         dispose();
                     }
