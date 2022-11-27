@@ -43,9 +43,6 @@ public class NewInvoiceForm extends JDialog implements ActionListener {
     private JButton reset;
     private JButton cancel;
 
-    public static void main(String[] args) {
-        new NewInvoiceForm(null);
-    }
 
     /**
      *
@@ -288,6 +285,9 @@ public class NewInvoiceForm extends JDialog implements ActionListener {
             date.setSelectedIndex(0);
             month.setSelectedIndex(0);
             year.setSelectedIndex(0);
+
+            // Clearing the temporary ArrayList of lines
+            tempInvoiceLines.clear();
 
             // Resetting the invoice items table
             invoiceItemsTableModel.setRowCount(0);

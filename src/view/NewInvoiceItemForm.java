@@ -204,6 +204,7 @@ public class NewInvoiceItemForm extends JDialog implements ActionListener  {
             tItemName.setText(def);
             tItemPrice.setText(def);
             tItemCount.setText(def);
+
         } else if (e.getSource() == cancel){
             dispose();
         }
