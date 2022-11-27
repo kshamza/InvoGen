@@ -355,6 +355,31 @@ public class SIGFrame extends JFrame implements ActionListener {
             @Override
             public void actionPerformed(ActionEvent e) {
 
+                if (invoiceItems.getSelectedRow() == -1){ // This means no line from the invoice items table is selected, print a message
+                    JOptionPane.showMessageDialog(null, "You have to select an invoice item first to delete.", "No Invoice item Selected", JOptionPane.INFORMATION_MESSAGE);
+                } else {
+                    int invoiceItemID = Integer.valueOf(invoiceItems.getValueAt(invoiceItems.getSelectedRow(), 0).toString());
+                    int a = JOptionPane.showConfirmDialog( frame,"Are you sure you want to delete this invoice item?", "Confirm Invoice Item Deletion", JOptionPane.YES_NO_OPTION );
+
+                    if (a == 0){ // Selected Yes --> Implement Deletion
+                        // Deletion will be done to the view only until changes are saved.
+                        for (int i = 0 ; i < getTempInvoiceLines().size() ; i++){
+                            if (getTempInvoiceLines().get(i).getId() == invoiceItemID){
+                                getTempInvoiceLines().remove(i);
+                                break;
+                            }
+                        }
+                        setUpdatedInvoiceLine();
+                        reloadSelectedInvoiceData("refresh");
+                        JOptionPane.showMessageDialog(null, "Remember to save to permanently delete the invoice items." , "Deletion Confirmation", JOptionPane.INFORMATION_MESSAGE);
+                    }
+                    // Otherwise, do nothing.
+                }
+
+                // After delete, if the table is not empty, select the first row in the table
+                if (invoiceItemsTableModel.getRowCount() >= 1){
+                    invoiceItems.setRowSelectionInterval(0, 0); // After the update of view, go back and re-select the invoice the user has edited.
+                }
             }
         });
 
@@ -467,9 +492,9 @@ public class SIGFrame extends JFrame implements ActionListener {
                 if (invoices.getSelectedRow() == -1) { // No invoice is selected
                     JOptionPane.showMessageDialog(null, "You have to select an invoice first to edit and save.", "No Invoice Selected", JOptionPane.INFORMATION_MESSAGE);
                 } else {
-                    if (!isDateFieldEdited && !isCustomerNameFieldEdited){  // If no changes detected, then inform the user that no changes to save.
+                    if (!isDateFieldEdited && !isCustomerNameFieldEdited && !updatedInvoiceLine){  // If no changes detected, then inform the user that no changes to save.
                         JOptionPane.showMessageDialog(null, "No changes to save!", "Unchanged Data", JOptionPane.PLAIN_MESSAGE);
-                    } else { // At least one of the two data has been changed, we need to save it.
+                    } else { // At least one of the three has been changed, we need to save it.
 
                         int invoiceID = invoices.getSelectedRow(); // Get the row selected to edit that row.
 
@@ -479,6 +504,12 @@ public class SIGFrame extends JFrame implements ActionListener {
 
                         if (isCustomerNameFieldEdited){ // Apply change if the customer name field was edited
                             Controller.getInvoicesArrayList().get(invoiceID).setCustomerName(updatedCustomerName);
+                        }
+
+                        if (updatedInvoiceLine){
+                            System.out.println(tempInvoiceLines);
+                            System.out.println(Controller.getInvoicesArrayList().get(invoiceID).getInvoiceLines().equals(tempInvoiceLines));
+                            Controller.getInvoicesArrayList().get(invoiceID).setInvoiceLines(tempInvoiceLines);
                         }
 
                         // TODO Maybe we can separate the update file and update view this way we can save operation on updating the view.
@@ -499,7 +530,7 @@ public class SIGFrame extends JFrame implements ActionListener {
             case "new":
                 if (Controller.getHeaderFileExist() && Controller.getLinesFileExist()){ // Allow saving only if proper files are selected.
                     // Reset any edits before heading to new invoice form.
-                    if (isDateFieldEdited || isCustomerNameFieldEdited) {
+                    if (isDateFieldEdited || isCustomerNameFieldEdited || updatedInvoiceLine) {
                         resetChangedFields();
                     }
 
@@ -681,10 +712,11 @@ public class SIGFrame extends JFrame implements ActionListener {
             String[][] invoiceItemsArray = new String[0][];
 
             if (mode.equals("cancel")){
+                Controller.load("no-prompt"); // re-load the data
                 tempInvoiceLines = Controller.getInvoiceLineArrayList(invoiceID); // Reload the tempInvoiceLines from the Controller and remove any added new lines.
                 invoiceItemsArray = Controller.getInvoiceListArray(invoiceID);
             } else if (mode.equals("refresh")) {
-                tempInvoiceLines = Controller.getInvoiceLineArrayList(invoiceID);
+//                tempInvoiceLines = Controller.getInvoiceLineArrayList(invoiceID);
                 invoiceItemsArray = Controller.invoiceLinesArrayListToArray(invoiceID, tempInvoiceLines);
             }
 
@@ -749,7 +781,7 @@ public class SIGFrame extends JFrame implements ActionListener {
      * A method that performs pre-exit check on any changes that may have been done to the Date and Customer Name fields.
      */
     private void executeExitCheck(){
-        if (updatedDate == null && updatedCustomerName == null){ // No changes detected, exit.
+        if (updatedDate == null && updatedCustomerName == null && updatedInvoiceLine == false){ // No changes detected, exit.
             dispose();
         } else { // Changes detected, confirm that the user does not want to save the changes.
             int a = JOptionPane.showConfirmDialog(this, "Are you sure you want to exit without saving your data?", "Confirm Exit Without Saving", JOptionPane.YES_NO_OPTION);

@@ -101,6 +101,12 @@ public class InvoiceHeader {
         return invoiceLines;
     }
 
+    public void setInvoiceLines(ArrayList<InvoiceLine> arrayList){
+        invoiceLines.clear();
+        for (InvoiceLine iL : arrayList){
+            invoiceLines.add(iL);
+        }
+    }
 
     /**
      * A method that converts this {@link InvoiceHeader} object into a {@link StringBuilder} object in the format used
