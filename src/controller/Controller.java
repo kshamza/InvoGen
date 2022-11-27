@@ -22,6 +22,8 @@ public final class Controller {
     private static int latestInvoiceNumber; // The highest invoice number after loading. Used to give a new number for the next new invoice.
     private static HashMap<Integer, String[][]> invoiceLinesMap;
 
+    private static HashMap<Integer, ArrayList<InvoiceLine>> invoiceLinesArrayListMap;
+
     private static boolean headerFileExist;
     private static boolean headerFileMalformed;
     private static boolean linesFileExist;
@@ -47,34 +49,30 @@ public final class Controller {
             int invoicesCount = invoicesArrayList.size();
             invoicesArray = new String[invoicesCount][4];
             invoiceLinesMap = new HashMap<>();
+            invoiceLinesArrayListMap = new HashMap<>();
+
+
             ArrayList<InvoiceLine> invoiceLineArrayList;
             int linesCount;
             String[][] tempInvoiceLinesArray;
 
             for (int i = 0 ; i < invoicesCount ; i++){
+
+                // Get the ArrayList of the invoice lines.
+
                 InvoiceHeader iH = invoicesArrayList.get(i);
                 int invNum = iH.getInvoiceNumber();
                 invoicesArray[i][0] = String.valueOf(invNum);
                 invoicesArray[i][1] = iH.getInvoiceDate();
                 invoicesArray[i][2] = iH.getCustomerName();
 
-                double invoiceTotal = 0;
                 invoiceLineArrayList = iH.getInvoiceLines();
-                linesCount = invoiceLineArrayList.size();
-                tempInvoiceLinesArray = new String[linesCount][5];
 
-                for (int j = 0 ; j < linesCount ; j++){
-                    InvoiceLine iL = invoiceLineArrayList.get(j);
-                    tempInvoiceLinesArray[j][0] = String.valueOf(invNum);
-                    tempInvoiceLinesArray[j][1] = iL.getItemName();
-                    tempInvoiceLinesArray[j][2] = String.valueOf(iL.getItemPrice());
-                    tempInvoiceLinesArray[j][3] = String.valueOf(iL.getCount());
-                    tempInvoiceLinesArray[j][4] = String.valueOf(iL.getItemPrice() * iL.getCount());
-                    invoiceTotal += (iL.getItemPrice() * iL.getCount());
-                }
-
-                invoiceLinesMap.put(invNum, tempInvoiceLinesArray);
-                invoicesArray[i][3] = String.valueOf(invoiceTotal);
+                // Store the ArrayList in the HashMap of ArrayLists for fast retreival
+                invoiceLinesArrayListMap.put(invNum, invoiceLineArrayList);
+                // Convert them to String[][] and store them in the HashMap for fast retreival
+                invoiceLinesMap.put(invNum, invoiceLinesArrayListToArray(invNum, invoiceLineArrayList));
+                invoicesArray[i][3] = String.valueOf(calculateInvoiceTotal(invoiceLineArrayList));
 
                 latestInvoiceNumber = invNum + 1; // Adding one after getting the highest invoice number loaded from the file.
             }
@@ -86,6 +84,28 @@ public final class Controller {
         }
 
 
+    }
+
+    public static String[][] invoiceLinesArrayListToArray(int invoiceNumber, ArrayList<InvoiceLine> arrayList){
+        int linesCount = arrayList.size();
+        String[][]  tempInvoiceLinesArray = new String[linesCount][5];
+        for (int i = 0 ; i < linesCount ; i++){
+            InvoiceLine iL = arrayList.get(i);
+            tempInvoiceLinesArray[i][0] = String.valueOf(invoiceNumber);
+            tempInvoiceLinesArray[i][1] = iL.getItemName();
+            tempInvoiceLinesArray[i][2] = String.valueOf(iL.getItemPrice());
+            tempInvoiceLinesArray[i][3] = String.valueOf(iL.getCount());
+            tempInvoiceLinesArray[i][4] = String.valueOf(iL.getItemPrice() * iL.getCount());
+        }
+        return tempInvoiceLinesArray;
+    }
+
+    public static double calculateInvoiceTotal(ArrayList<InvoiceLine> arrayList){
+        double invoiceTotal = 0;
+        for (InvoiceLine iL : arrayList){
+            invoiceTotal += (iL.getItemPrice() * iL.getCount());
+        }
+        return invoiceTotal;
     }
 
     /**
@@ -107,6 +127,10 @@ public final class Controller {
 
     public static String[][] getInvoiceListArray(int invoiceNum){
         return invoiceLinesMap.get(invoiceNum);
+    }
+
+    public static ArrayList<InvoiceLine> getInvoiceLineArrayList(int invoiceNum) {
+        return invoiceLinesArrayListMap.get(invoiceNum);
     }
 
     public static int getLatestInvoiceNumber(){

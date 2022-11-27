@@ -2,6 +2,7 @@ package view;
 
 import controller.Controller;
 import model.InvoiceHeader;
+import model.InvoiceLine;
 
 import javax.swing.*;
 import javax.swing.event.ListSelectionEvent;
@@ -9,6 +10,7 @@ import javax.swing.event.ListSelectionListener;
 import javax.swing.table.DefaultTableModel;
 import java.awt.*;
 import java.awt.event.*;
+import java.util.ArrayList;
 
 /**
  * A class that represents the main frame of the SIG application
@@ -42,6 +44,10 @@ public class SIGFrame extends JFrame implements ActionListener {
     // Right Panel
     private JPanel rightPanel;
     private JPanel rightTableSubPanel;
+
+    private static ArrayList<InvoiceLine> tempInvoiceLines;
+    private JPanel rightTableButtonsSubPanel;
+
     private JPanel rightButtonsSubPanel;
     private JPanel invoiceDataSubPanel;
 
@@ -324,6 +330,23 @@ public class SIGFrame extends JFrame implements ActionListener {
         rightTableSubPanel = new JPanel(new BorderLayout());
 
         rightTableSubPanel.setLayout(new BoxLayout(rightTableSubPanel, BoxLayout.Y_AXIS));
+
+
+        rightTableButtonsSubPanel = new JPanel(new BorderLayout());
+        rightTableButtonsSubPanel.setLayout(new GridLayout(1,3));
+        JButton addItem= new JButton("Create Item");
+        addItem.setFont(new Font("Arial", Font.PLAIN, 15));
+        addItem.setActionCommand("newItem");
+        addItem.addActionListener(this);
+        JButton deleteItem = new JButton("Delete Item");
+        deleteItem.setFont(new Font("Arial", Font.PLAIN, 15));
+        deleteItem.setActionCommand("deleteItem");
+        deleteItem.addActionListener(this);
+        // Distributing the two buttons over a row of five columns.
+        rightTableButtonsSubPanel.add(addItem);
+        rightTableButtonsSubPanel.add(Box.createRigidArea(new Dimension(5, 0)));
+        rightTableButtonsSubPanel.add(deleteItem);
+        rightTableSubPanel.add(rightTableButtonsSubPanel);
 
         invoiceItemsTableModel = new DefaultTableModel();
 
@@ -638,6 +661,8 @@ public class SIGFrame extends JFrame implements ActionListener {
             invTotalField.setText(tempArray[idx][3]);
 
             String[][] invoiceItemsArray = Controller.getInvoiceListArray(invoiceID);
+            tempInvoiceLines = Controller.getInvoiceLineArrayList(invoiceID);
+
 
             // Resetting the invoice items table
             invoiceItemsTableModel.setRowCount(0);
@@ -708,4 +733,9 @@ public class SIGFrame extends JFrame implements ActionListener {
             // Otherwise, get back to the app.
         }
     }
+
+    public static ArrayList<InvoiceLine> getTempInvoiceLines() {
+        return tempInvoiceLines;
+    }
+
 }
