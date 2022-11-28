@@ -67,6 +67,8 @@ Notice that no build automation is used to manage this project. Please follow th
 3. Open the project using [IntelliJ IDEA](https://www.jetbrains.com/idea/) or other preferred IDE.
 4. Open and run the file ```src/app/Main.java```
 
+
+### Preview
 ![A gif showing how to run the project](/resources/assets/images/SIG%20Preview_Run%20Project.gif "Starting the project")
 
 
@@ -119,10 +121,6 @@ This was one of the most challenging parts of this project. The following scenar
     * If it is the InvoiceLine.csv file, a message will show and still nothing will be loaded. I was loading partial info, but decided to cancel this.
 * Malformed files - Handled in a similar way to the FileNotFound above.
 * I am still throwing some print statements in the terminal with details - Not sure if that is a good practice though.
-
-### Preview
-
-![A gif showing the SIG Application Preview](/resources/assets/images/SIG%20Preview.gif "Preview of the SIG application in action")
 
 
 ## Tests
