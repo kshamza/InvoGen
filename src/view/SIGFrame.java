@@ -357,7 +357,6 @@ public class SIGFrame extends JFrame implements ActionListener {
         deleteItem.addActionListener(new ActionListener() {
             @Override
             public void actionPerformed(ActionEvent e) {
-
                 if (invoices.getSelectedRow() != -1) {
                     if (invoiceItems.getSelectedRow() == -1) { // This means no line from the invoice items table is selected, print a message
                         JOptionPane.showMessageDialog(null, "You have to select an invoice item first to delete.", "No Invoice item Selected", JOptionPane.INFORMATION_MESSAGE);
@@ -817,8 +816,8 @@ public class SIGFrame extends JFrame implements ActionListener {
     }
 
 
-    public static int getSelectedInvoice(){
-        return invoices.getSelectedRow();
+    public static int getSelectedInvoiceID(){
+        return Integer.valueOf(invoices.getValueAt(invoices.getSelectedRow(), 0).toString());
     }
 
 }

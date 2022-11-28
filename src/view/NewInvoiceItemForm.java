@@ -140,7 +140,7 @@ public class NewInvoiceItemForm extends JDialog implements ActionListener  {
                         invoiceItem .append(Controller.getLatestInvoiceNumber());
                     } else if (parentDialog instanceof SIGFrame) {
 //                        invoiceItem .append(SIGFrame.getTempInvoiceLines().get(0).getId()); // Causes a problem when we have no invoice items in an invoice.
-                        invoiceItem.append(SIGFrame.getSelectedInvoice()); // Rely on the number of the invoice itself.
+                        invoiceItem.append(SIGFrame.getSelectedInvoiceID()); // Rely on the number of the invoice itself.
                     }
 
                     invoiceItem.append(",");
