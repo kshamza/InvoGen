@@ -38,7 +38,7 @@ public class SIGFrame extends JFrame implements ActionListener {
 
     private DefaultTableModel invoicesTableModel;
 
-    private JTable invoices;
+    private static JTable invoices;
 
 
     // Right Panel
@@ -816,4 +816,8 @@ public class SIGFrame extends JFrame implements ActionListener {
         return tempInvoiceLines;
     }
 
+
+    public static int getSelectedInvoice(){
+        return invoices.getSelectedRow();
+    }
 }

@@ -137,9 +137,10 @@ public class NewInvoiceItemForm extends JDialog implements ActionListener  {
                     StringBuilder invoiceItem = new StringBuilder();
 
                     if (parentDialog instanceof JDialog){
-                        invoiceItem .append(Controller.getLatestInvoiceNumber());
+                        invoiceItem.append(Controller.getLatestInvoiceNumber());
                     } else if (parentDialog instanceof SIGFrame) {
-                        invoiceItem .append(SIGFrame.getTempInvoiceLines().get(0).getId());
+//                        invoiceItem .append(SIGFrame.getTempInvoiceLines().get(0).getId());
+                        invoiceItem.append(SIGFrame.getSelectedInvoice()); // Depend on the invoice itself in case all invoice lines are deleted.
                     }
 
                     invoiceItem.append(",");
