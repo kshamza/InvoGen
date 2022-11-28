@@ -556,7 +556,7 @@ public class SIGFrame extends JFrame implements ActionListener {
                 if (invoices.getSelectedRow() == -1){ // This means no line from the main table is selected, print a message
                     JOptionPane.showMessageDialog(null, "You have to select an invoice first to delete.", "No Invoice Selected", JOptionPane.INFORMATION_MESSAGE);
                 } else {
-                      int invoiceID = Integer.valueOf(invoices.getValueAt(invoices.getSelectedRow(), 0).toString());
+                      int invoiceID = getSelectedInvoiceID();
                     int a = JOptionPane.showConfirmDialog( this,"Are you sure you want to delete this invoice?", "Confirm Invoice Deletion", JOptionPane.YES_NO_OPTION );
 
                     if (a == 0){ // Selected Yes --> Implement Deletion
@@ -748,7 +748,7 @@ public class SIGFrame extends JFrame implements ActionListener {
      * the table.
      */
     private void reloadSelectedInvoiceData(String mode){
-        loadSelectedInvoiceData(Integer.valueOf(invoices.getValueAt(invoices.getSelectedRow(), 0).toString()), mode);
+        loadSelectedInvoiceData(getSelectedInvoiceID(), mode);
     }
 
     /**
